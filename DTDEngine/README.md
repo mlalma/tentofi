@@ -4,6 +4,12 @@ Decentralized Token Repository (DTD) is used for managing bilateral over-the-cou
 
 It handles initiation, clearing and settelement of the contracts while trying to minimize the counterparty risk for participants.
 
+## Introduction
+
+## Example
+
+## Considerations
+
 ## Potential Major Improvements
 
 * Novation process: Enable transferring counterparty position to a new party (if allowed by contract)

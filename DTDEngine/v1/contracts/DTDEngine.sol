@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -54,6 +54,8 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	mapping(uint256 => Contract) private dtdContracts;
 	uint256 private dtdContractCounter = 1;
 
+	bool private emergencyValve = false;
+
 	// All the events sent by this contract
 	event VaultCreated(uint256 vaultCounter, address creator, address tokenAddr);
 	event ContractCreated(uint256 contractId, address otcContract, address creator);
@@ -64,6 +66,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 
 	// Constructor
 	constructor() {
+		_grantRole(DEFAULT_ADMIN_ROLE, tx.origin);
 		_grantRole(DTD_ADMIN_ROLE, tx.origin);
 		_grantRole(CONTRACT_ADMIN_ROLE, tx.origin);
 		_grantRole(CONTRACT_ROLE, tx.origin);
@@ -300,5 +303,22 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 
 			emit ContractMarkedToMarket(contractId, pAndL);
 		}
+	}
+
+	// Enable emergency valve
+	function enableEmergencyValve() public whenPaused onlyRole(DTD_ADMIN_ROLE) {
+		emergencyValve = true;
+	}
+
+	// This is for emergencies - when emergency valve has been enabled it provides chance for vault owners to
+	// withdraw their *full* balance. Only used for extreme situations, the contract cannot be productively used anymore
+	function emergencyVaultTransfer(uint256 vaultId) public whenPaused {
+		require(emergencyValve);
+		require(tx.origin == dtdVaults[vaultId].owner);
+		require(dtdVaults[vaultId].depositBalance > 0);
+
+		IERC20 token = IERC20(dtdVaults[vaultId].tokenAddr);
+		dtdVaults[vaultId].depositBalance = 0;
+		token.transfer(tx.origin, dtdVaults[vaultId].depositBalance);
 	}
 }
