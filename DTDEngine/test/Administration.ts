@@ -3,7 +3,7 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { createDTDEngine, createEmptyMockContract, createMockToken } from "./utils";
+import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
 import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
 
 describe("Administration", function () {

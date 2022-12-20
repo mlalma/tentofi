@@ -82,6 +82,11 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		}
 	}
 
+	// Returns vault
+	function getVault(uint256 vaultId) public view returns (Vault memory) {
+		return dtdVaults[vaultId];
+	}
+
 	// Creates new vault for a user
 	function createVault(address tokenAddr) public whenNotPaused returns (uint256) {
 		Vault memory vault;
@@ -172,7 +177,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	}
 
 	// Changes minimum margin level
-	function changeMinMargin(uint256 sourceVault, int256 delta)
+	function _changeMinMargin(uint256 sourceVault, int256 delta)
 		internal
 		returns (bool defaulted, int256 availableMargin)
 	{
@@ -196,7 +201,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	}
 
 	// Transfers balance between two vaults
-	function transferBalance(
+	function _transferBalance(
 		uint256 vault1,
 		uint256 vault2,
 		int256 delta
@@ -229,30 +234,30 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 defaultedVault = 0;
 		if (prevPandL <= 0 && pAndL <= 0) {
 			// Short party was winning and is still winning
-			(bool defaulted, int256 availableMargin) = changeMinMargin(longVault, prevPandL - pAndL);
+			(bool defaulted, int256 availableMargin) = _changeMinMargin(longVault, prevPandL - pAndL);
 			if (defaulted) {
 				defaultedVault = longVault;
 				pAndL = prevPandL - availableMargin;
 			}
 		} else if (prevPandL >= 0 && pAndL >= 0) {
 			// Long party was winning and is still winning
-			(bool defaulted, int256 availableMargin) = changeMinMargin(shortVault, pAndL - prevPandL);
+			(bool defaulted, int256 availableMargin) = _changeMinMargin(shortVault, pAndL - prevPandL);
 			if (defaulted) {
 				defaultedVault = shortVault;
 				pAndL = availableMargin + prevPandL;
 			}
 		} else if (prevPandL >= 0 && pAndL <= 0) {
 			// Long party was winning, but now short party is winning
-			changeMinMargin(shortVault, -prevPandL);
-			(bool defaulted, int256 availableMargin) = changeMinMargin(longVault, -pAndL);
+			_changeMinMargin(shortVault, -prevPandL);
+			(bool defaulted, int256 availableMargin) = _changeMinMargin(longVault, -pAndL);
 			if (defaulted) {
 				defaultedVault = longVault;
 				pAndL = -availableMargin;
 			}
 		} else if (prevPandL <= 0 && pAndL >= 0) {
 			// Short party was winning, but now long party is winning
-			changeMinMargin(longVault, prevPandL);
-			(bool defaulted, int256 availableMargin) = changeMinMargin(shortVault, pAndL);
+			_changeMinMargin(longVault, prevPandL);
+			(bool defaulted, int256 availableMargin) = _changeMinMargin(shortVault, pAndL);
 			if (defaulted) {
 				defaultedVault = shortVault;
 				pAndL = availableMargin;
@@ -263,15 +268,19 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 			// A party has defaulted. Move PnL as well as penalty margin to winning counterparty
 
 			// Move as much PandL between the two parties as possible
-			transferBalance(shortVault, longVault, pAndL);
+			_transferBalance(shortVault, longVault, pAndL);
 
 			if (defaultedVault == longVault) {
 				// Move penalty margins to the winning party
-				transferBalance(longVault, shortVault, int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
-				changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
+				_transferBalance(longVault, shortVault, int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
+				_changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
 			} else {
-				transferBalance(shortVault, longVault, int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
-				changeMinMargin(longVault, -int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
+				_transferBalance(
+					shortVault,
+					longVault,
+					int256(dtdContracts[contractId].penaltyMarginShortCounterparty)
+				);
+				_changeMinMargin(longVault, -int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
 			}
 
 			// Notify contract so that it can also do cleanup
@@ -286,11 +295,11 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 			// Contract has finished and no party defaulted
 
 			// Give the penalty margin back to both parties
-			changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
-			changeMinMargin(longVault, -int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
+			_changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
+			_changeMinMargin(longVault, -int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
 
 			// Move PandL between the two parties
-			transferBalance(shortVault, longVault, pAndL);
+			_transferBalance(shortVault, longVault, pAndL);
 
 			// Delete contract
 			delete dtdContracts[contractId];

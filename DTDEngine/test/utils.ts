@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { DTDEngine, EmptyMockContract, MockToken, MockToken__factory } from "../typechain-types";
+import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
 
 export async function createDTDEngine(): Promise<DTDEngine> {
     const DTDEngineFactory = await ethers.getContractFactory("DTDEngine");
