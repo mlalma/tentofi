@@ -133,7 +133,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	// Locks the contract
 	function lockContract(uint256 contractId, uint64 longPartyVaultId) public whenNotPaused onlyRole(CONTRACT_ROLE) {
 		require(dtdContracts[contractId].contractAddress != address(0));
-		require(dtdContracts[contractId].longCounterpartyVault != 0);
+		require(dtdContracts[contractId].shortCounterpartyVault != 0);
 		require(tx.origin == dtdVaults[longPartyVaultId].owner);
 		require(
 			dtdVaults[longPartyVaultId].depositBalance >=
@@ -225,6 +225,8 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 longVault = dtdContracts[contractId].longCounterpartyVault;
 
 		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);
+
+		//TODO: We should verify contract is "active" i.e. both parties have been established
 
 		IDTDEngineContract marketContract = IDTDEngineContract(dtdContracts[contractId].contractAddress);
 		(int256 pAndL, bool settled) = marketContract.markToMarket(dtdContracts[contractId].contractId);
