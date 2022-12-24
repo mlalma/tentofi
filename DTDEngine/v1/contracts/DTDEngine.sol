@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IDTDEngineContract.sol";
 
-// import "hardhat/console.sol";
-
 // Decentralized Token Depository (DTD) Engine for managing bilateral contracts
 // between counterparties.
 contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
@@ -220,13 +218,11 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	}
 
 	// Marks to market a contract
-	function markToMarket(uint256 contractId) public whenNotPaused {
+	function markToMarket(uint256 contractId) public whenNotPaused returns (int256) {
 		uint256 shortVault = dtdContracts[contractId].shortCounterpartyVault;
 		uint256 longVault = dtdContracts[contractId].longCounterpartyVault;
 
 		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);
-
-		//TODO: We should verify contract is "active" i.e. both parties have been established
 
 		IDTDEngineContract marketContract = IDTDEngineContract(dtdContracts[contractId].contractAddress);
 		(int256 pAndL, bool settled) = marketContract.markToMarket(dtdContracts[contractId].contractId);
@@ -314,6 +310,8 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 
 			emit ContractMarkedToMarket(contractId, pAndL);
 		}
+
+		return pAndL;
 	}
 
 	// Enable emergency valve

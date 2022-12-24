@@ -1,5 +1,3 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -24,6 +22,7 @@ describe("Creation", function () {
 
         await mockToken.connect(alice).faucet(1_000_000);
         await mockToken.connect(bob).faucet(1_000_000);
+        await mockToken2.connect(bob).faucet(1_000_000);
 
         const contractRole = await dtdEngine.CONTRACT_ROLE();
         await dtdEngine.grantRole(contractRole, bob.address);
@@ -112,7 +111,22 @@ describe("Creation", function () {
         });
 
         it("Should create contract and failt to lock it", async function () {
+            await expect(dtdEngine.createVault(mockToken.address)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockToken.address);
+            await expect(dtdEngine.connect(bob).createVault(mockToken.address)).to.emit(dtdEngine, "VaultCreated").withArgs(2, bob.address, mockToken.address);
+            await expect(dtdEngine.connect(bob).createVault(mockToken2.address)).to.emit(dtdEngine, "VaultCreated").withArgs(3, bob.address, mockToken2.address);
 
+            await mockToken.approve(dtdEngine.address, 1_000_000);
+            await dtdEngine.changeDepositBalance(1, 1_000_000);
+
+            await expect(dtdEngine.createContract(emptyMockContract.address, 2, 1, 1000, 1000)).to.emit(dtdEngine, "ContractCreated").withArgs(1, emptyMockContract.address, alice.address);
+
+            await expect(dtdEngine.connect(bob).lockContract(2, 2)).to.be.reverted;
+            await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.be.reverted;
+
+            await mockToken2.connect(bob).approve(dtdEngine.address, 1_000_000);
+            await dtdEngine.connect(bob).changeDepositBalance(3, 1_000_000);
+
+            await expect(dtdEngine.connect(bob).lockContract(1, 3)).to.be.reverted;
         });
     });
 });
