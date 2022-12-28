@@ -8,6 +8,7 @@ contract EmptyMockContract is IDTDEngineContract {
 	int256[] private payoffProfile;
 	uint256 private curPayoffPosition = 0;
 	bool private dunzo = false;
+	bool private defaultHappened = false;
 
 	constructor() {}
 
@@ -21,7 +22,7 @@ contract EmptyMockContract is IDTDEngineContract {
 		if (dunzo) {
 			return;
 		}
-		dunzo = curPayoffPosition + 1 >= payoffProfile.length;
+		dunzo = curPayoffPosition + 1 >= payoffProfile.length - 1;
 		curPayoffPosition = (curPayoffPosition + 1) % payoffProfile.length;
 	}
 
@@ -47,5 +48,11 @@ contract EmptyMockContract is IDTDEngineContract {
 	function partyHasDefaulted(
 		uint256, /*contractId*/
 		address /*defaultedParty*/
-	) external {}
+	) external {
+		defaultHappened = true;
+	}
+
+	function hasDefaulted() external view returns (bool) {
+		return defaultHappened;
+	}
 }
