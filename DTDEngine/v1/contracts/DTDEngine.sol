@@ -227,6 +227,17 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		IDTDEngineContract marketContract = IDTDEngineContract(dtdContracts[contractId].contractAddress);
 		(int256 pAndL, bool settled) = marketContract.markToMarket(dtdContracts[contractId].contractId);
 
+		if (longVault == 0) {
+			if (settled) {
+				// This happens when counterparty was not found and contract is deemed to be closed
+				_changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
+				delete dtdContracts[contractId];
+				emit ContractSettled(contractId, 0);
+			} else {
+				return 0;
+			}
+		}
+
 		int256 prevPandL = dtdContracts[contractId].currentPnL;
 
 		uint256 defaultedVault = 0;

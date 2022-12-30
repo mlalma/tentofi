@@ -150,4 +150,16 @@ describe("MarkToMarket", function () {
         expect(aliceVault.minMarginLevel).to.equal(0);
         expect(bobVault.minMarginLevel).to.equal(0);
     });
+
+    it("Should correctly settle contract when there is no counterparty and contract is terminated", async function () {
+        await expect(dtdEngine.createContract(emptyMockContract2.address, 2, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2.address, alice.address);
+        let aliceVault = await dtdEngine.getVault(1);
+        expect(aliceVault.depositBalance).to.equal(START_TOKENS);
+        expect(aliceVault.minMarginLevel).to.equal(2 * PENALTY_MARGIN);
+        emptyMockContract2.setDunzo(true);
+        await expect(dtdEngine.markToMarket(2)).to.emit(dtdEngine, "ContractSettled").withArgs(2, 0);
+        aliceVault = await dtdEngine.getVault(1);
+        expect(aliceVault.depositBalance).to.equal(START_TOKENS);
+        expect(aliceVault.minMarginLevel).to.equal(PENALTY_MARGIN);
+    });
 });

@@ -10,7 +10,10 @@ contract EmptyMockContract is IDTDEngineContract {
 	bool private dunzo = false;
 	bool private defaultHappened = false;
 
-	constructor() {}
+	constructor() {
+		payoffProfile = new int256[](1);
+		payoffProfile.push(0);
+	}
 
 	function setPayoff(int256[] calldata payoffs) external {
 		payoffProfile = payoffs;
@@ -54,5 +57,9 @@ contract EmptyMockContract is IDTDEngineContract {
 
 	function hasDefaulted() external view returns (bool) {
 		return defaultHappened;
+	}
+
+	function setDunzo(bool dunzod) external {
+		dunzo = dunzod;
 	}
 }
