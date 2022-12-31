@@ -106,5 +106,5 @@ https://www.bis.org/cpmi/publ/d27.pdf
 [5] "ISDA Whitepaper: Smart Derivatives Contracts: From Concept to Construction" (2018)
 https://www.isda.org/a/cHvEE/Smart-Derivatives-Contracts-From-Concept-to-Construction-Oct-2018.pdf
 
-[6] "EIP 6123: Smart Derivative Contract" - Christian Friest et al
+[6] "EIP 6123: Smart Derivative Contract" - Christian Fries et al
 https://github.com/ethereum/EIPs/blob/master/EIPS/eip-6123.md
