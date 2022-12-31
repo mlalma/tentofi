@@ -21,11 +21,11 @@ Before any party can create or become a counterparty of a contract that uses DTD
 The complete lifecycle of an OTC contract using DTD is as follows:
 
 1. Party being the seller (short) calls OTC instrument to create new contract instance.
-2. OTC instrument calls DTD to register the new contract instance. Penalty margin is set for both parties and seller submits penalty margin.
+2. OTC instrument calls DTD to register the new contract instance. Seller submits penalty margin.
 3. Buyer (long) calls OTC instrument to lock the contract.
-3. OTC instrument calls DTD to lock the contract. Buyer submits the penalty margin. Contract is now in effect
-4. During the lifetime of the contract, either party can request to mark-to-market the contract to change the minimum margin requirements of vaults
-5. Contract gets settled in the end after the duration runs out or if there is default as part of mark-to-market calls.
+3. OTC instrument calls DTD to lock the contract. Buyer submits the penalty margin. Contract is now in effect.
+4. Either party can request to mark-to-market the contract to change the minimum margin requirements of vaults.
+5. Contract gets settled in the end after the duration runs out or if there is default as a part of mark-to-market calls.
 
 Note that while the counterparties directly call DTD to create the vaults they cannot register or lock the contract. Those calls must come from smart contracts containing the OTC instrument logic. Any OTC contract using DTD must have **CONTRACT_ROLE** in DTD in order to be able to call the required functions.
 
