@@ -1,5 +1,34 @@
 {
-  "name": "hardhat-project",
+  "name": "tento-dtd",
+  "description": "Decentralized Token Repository (DTD) for managing clearing and settlement of bilateral OTC contracts",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "homepage": "https://github.com/mlalma/tentofi/blob/main/DTDEngine/README.md",
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "otc",
+    "clearing",
+    "settlement",
+    "trading"
+  ],
+  "author": "mla_lma",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlalma/tentofi"
+  },
+  "bugs": {
+    "url": "https://github.com/mlalma/tentofi/issues"
+  },
+  "files": [
+    "v1/contracts",
+    "v1/interfaces",
+    "artifacts/v1/contracts",
+    "artifacts/v1/interfaces"
+  ],
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "hardhat": "^2.12.2"
