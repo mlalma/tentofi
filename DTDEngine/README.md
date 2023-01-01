@@ -81,6 +81,22 @@ In case the default happens, i.e. contract is marked to market and the minimum m
 
 Note that critical part when negotiating any OTC contract is setting the penalty margin a) high enough to ensure that neither party wants to default and are motivated to increase the deposit balance of their vault in case default is about to happen and b) not setting the penalty margin too high to ensure that the contract is capital efficient.
 
+## Installation (for all versions)
+
+1. First create file called **.env** containing two constants `API_URL` and `PRIVATE_KEY`. `API_URL` is endpoint url to Mumbai Testnet node (e.g. from Alchemy) and `PRIVATE_KEY` is the wallet private key containing enough MATIC for deploying contract.
+2. Download the dependencies for the project using npm `npm install`
+3. You should now have everything for testing and deploying the contracts
+
+## Testing
+
+Run `npx hardhat test` to run all the unit tests. Make sure that all tests for all contracts pass.
+
+## Deployment
+
+Run `npx hardhat run ./scripts/deploy.ts --network polygon_mumbai`. Note that you need to have enough MATIC on your wallet to deploy the contracts. The script will print out the addresses for contracts and note them down!
+
+Currently only Polygon Mumbai testnet is supported.
+
 ## Potential Improvements
 
 - Novation process: Enable transferring counterparty position to a new party (if allowed by contract)
