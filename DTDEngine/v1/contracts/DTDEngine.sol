@@ -63,7 +63,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	event ContractMarginCall(uint256 contractId, address marginCalledParty);
 
 	// Constructor
-	constructor() {
+	constructor() ReentrancyGuard() AccessControl() Pausable() {
 		_grantRole(DEFAULT_ADMIN_ROLE, tx.origin);
 		_grantRole(DTD_ADMIN_ROLE, tx.origin);
 		_grantRole(CONTRACT_ADMIN_ROLE, tx.origin);
@@ -154,7 +154,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	// Changes deposit balance for a vault
 	// If amount > 0 then depositing to the vault
 	// If amount < 0 then moving from vault to the user account while making sure that the transfer won't breach required min margin level
-	function changeDepositBalance(uint64 vaultId, int256 amount) public whenNotPaused {
+	function changeDepositBalance(uint64 vaultId, int256 amount) public whenNotPaused nonReentrant {
 		require(msg.sender == dtdVaults[vaultId].owner);
 
 		IERC20 token = IERC20(dtdVaults[vaultId].tokenAddr);
@@ -332,7 +332,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 
 	// This is for emergencies - when emergency valve has been enabled it provides chance for vault owners to
 	// withdraw their *full* balance. Only used for extreme situations, the contract cannot be productively used anymore
-	function emergencyVaultTransfer(uint256 vaultId) public whenPaused {
+	function emergencyVaultTransfer(uint256 vaultId) public whenPaused nonReentrant {
 		require(emergencyValve);
 		require(tx.origin == dtdVaults[vaultId].owner);
 		require(dtdVaults[vaultId].depositBalance > 0);
