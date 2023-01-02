@@ -1,0 +1,18 @@
+{
+  "name": "tento-indexfactory",
+  "version": "1.0.0",
+  "description": "Create indices used to track values of underlyings in e.g. OTC derivatives",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "hardhat": "^2.12.5"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}
