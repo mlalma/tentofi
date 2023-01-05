@@ -13,13 +13,13 @@ interface IIndex {
 	}
 
 	struct IndexStorage {
-		uint32 maxAmountOfMarks;
 		uint32 markCount;
 		uint64 markingStartTimestamp;
 		uint64 markingPrevTimestamp;
-		uint64 minDeltaBetweenSpottings;
+		uint64 minDeltaBetweenMarkings;
 		bytes32 oracleIndex;
+		int256 currentIndexValue;
 		int256[] strikes;
-		uint8[] weights;
+		int8[] weights;
 	}
 }

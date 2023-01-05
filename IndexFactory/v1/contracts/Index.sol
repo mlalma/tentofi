@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./IndexFactory.sol";
 import "../interfaces/IIndex.sol";
 import "../interfaces/IIndexCalculator.sol";
 import "../interfaces/IIndexFix.sol";
@@ -31,26 +30,53 @@ contract Index is IIndex, ReentrancyGuard {
 		}
 	}
 
-	function createSpotIndex(bytes32 oracleIndex, uint8[] calldata weights) public nonReentrant returns (uint256) {
+	function createSpotIndex(
+		bytes32 oracleIndex,
+		int8[] calldata weights,
+		int256[] calldata calculatorParams
+	) public nonReentrant returns (uint256) {
 		require(oracleStorage[oracleIndex].oracles.length == weights.length);
 
 		IndexStorage memory index;
 		index.oracleIndex = oracleIndex;
 		index.weights = weights;
-		index.maxAmountOfMarks = type(uint32).max;
-		index.minDeltaBetweenSpottings = 0;
+		index.markCount = type(uint32).max;
+		index.minDeltaBetweenMarkings = 0;
 		indices[indexCounter] = index;
 
-		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter);
+		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
 
 		indexCounter += 1;
 		return indexCounter - 1;
 	}
 
-	function fixSpotIndex(uint256 indexId, int256[] calldata fixStyleParams) public nonReentrant {
+	function createIndex(
+		uint32 markCount,
+		uint64 minDeltaBetweenMarkings,
+		bytes32 oracleIndex,
+		int8[] calldata weights,
+		int256[] calldata calculatorParams
+	) public nonReentrant returns (uint256) {
+		require(oracleStorage[oracleIndex].oracles.length == weights.length);
+
+		IndexStorage memory index;
+		index.oracleIndex = oracleIndex;
+		index.weights = weights;
+		index.markCount = markCount;
+		index.minDeltaBetweenMarkings = minDeltaBetweenMarkings;
+		indices[indexCounter] = index;
+
+		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
+
+		indexCounter += 1;
+		return indexCounter - 1;
+	}
+
+	function fixIndex(uint256 indexId, int256[] calldata fixStyleParams) public nonReentrant {
 		IndexStorage storage index = indices[indexId];
 
 		require(index.markingStartTimestamp == 0);
+		require(index.markCount > 0);
 		require(index.oracleIndex != bytes32(0));
 
 		index.strikes = oracleStorage[index.oracleIndex].fixStyle.fixStrikes(
@@ -59,6 +85,35 @@ contract Index is IIndex, ReentrancyGuard {
 		);
 
 		index.markingStartTimestamp = uint64(block.timestamp);
+		index.currentIndexValue = oracleStorage[index.oracleIndex].calculator.calculateIndex(
+			oracleStorage[index.oracleIndex],
+			index,
+			indexId
+		);
+		index.markingPrevTimestamp = uint64(block.timestamp);
+	}
+
+	function calculateIndex(uint256 indexId) public nonReentrant returns (int256 indexValue) {
+		IndexStorage storage index = indices[indexId];
+
+		require(index.markingStartTimestamp >= 0);
+
+		if (
+			index.markCount == 0 ||
+			(index.minDeltaBetweenMarkings > 0 &&
+				(index.markingPrevTimestamp + index.minDeltaBetweenMarkings < block.timestamp))
+		) {
+			return index.currentIndexValue;
+		}
+
+		indexValue = oracleStorage[index.oracleIndex].calculator.calculateIndex(
+			oracleStorage[index.oracleIndex],
+			index,
+			indexId
+		);
+
+		index.currentIndexValue = indexValue;
+		index.markCount -= 1;
 		index.markingPrevTimestamp = uint64(block.timestamp);
 	}
 }
