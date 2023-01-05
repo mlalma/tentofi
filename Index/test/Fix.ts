@@ -23,8 +23,8 @@ describe("Fix tests", function () {
         spotFixMul = await createSpotFixMul();
 
         const vals = [1, 2, 3, 4, 5, 6];
-        oracles = new Array<MockOracle>(ORACLE_COUNT);
-        oracleAddresses = new Array<string>(ORACLE_COUNT);
+        oracles = new Array<MockOracle>();
+        oracleAddresses = new Array<string>();
         for (let i = 0; i < ORACLE_COUNT; i++) {
             const oracle = await createMockOracle();
             await oracle.setVals(vals);
@@ -35,7 +35,7 @@ describe("Fix tests", function () {
 
     describe("NoFix tests", function () {
         it("Should not succeed", async function () {
-            const fixVals = new Array<number>(ORACLE_COUNT - 1);
+            const fixVals = new Array<number>();
             for (let i = 0; i < ORACLE_COUNT - 1; i++) {
                 fixVals.push(0);
             }
@@ -43,13 +43,13 @@ describe("Fix tests", function () {
         });
 
         it("Should set the strikes correctly", async function () {
-            const fixVals = new Array<number>(ORACLE_COUNT);
+            const fixVals = new Array<number>();
             for (let i = 0; i < ORACLE_COUNT; i++) {
                 fixVals.push(i);
             }
-
+            
             const strikes = await noFix.fixStrikes(oracleAddresses, fixVals);
-            for (let i = 0; i < ORACLE_COUNT; i++) {
+            for (let i = 0; i < ORACLE_COUNT; i++) {                
                 expect(fixVals[i]).to.equal(strikes[i]);
             }
         });
