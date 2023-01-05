@@ -53,7 +53,7 @@ contract SpotFixPlus is SpotFix {
 	}
 }
 
-// "Spotfix-mul" index fix: The strikes are spots times a constant per strike. Constant must be in 224.32 fixed point format
+// "Spotfix-mul" index fix: The strikes are spots times a constant per strike. Constant must be in 240.16 fixed point format
 contract SpotFixMul is SpotFix {
 	constructor() SpotFix() {}
 
@@ -66,7 +66,7 @@ contract SpotFixMul is SpotFix {
 		strikes = SpotFix(this).fixStrikes(oracles, fixParams);
 		require(strikes.length == fixParams.length);
 		for (uint256 i = 0; i < strikes.length; i++) {
-			strikes[i] = (strikes[i] * fixParams[i]) >> 32;
+			strikes[i] = (strikes[i] * fixParams[i]) >> 16;
 		}
 	}
 }
