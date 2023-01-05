@@ -8,15 +8,28 @@ import "../interfaces/IIndexCalculator.sol";
 int8 constant SPOT_DECIMAL_COUNT = 10;
 int256 constant SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
 
+abstract contract IndexCalculator is IIndexCalculator {
+	address private immutable _indexContract;
+
+	constructor(address indexContract) {
+		_indexContract = indexContract;
+	}
+
+	modifier isIndexContract() {
+		require(msg.sender == _indexContract);
+		_;
+	}
+}
+
 // Calculates absolute change in index
-contract AbsoluteIndexCalculator is IIndexCalculator {
-	constructor() {}
+contract AbsoluteSpotIndexCalculator is IndexCalculator {
+	constructor(address indexContract) IndexCalculator(indexContract) {}
 
 	function prepareNewIndex(
 		uint256, /*numOfComponents*/
 		uint256, /*indexId*/
 		int256[] calldata params
-	) external {
+	) external isIndexContract {
 		// For absolute change we don't need to store any data as the latest spot value is used
 	}
 
@@ -28,7 +41,7 @@ contract AbsoluteIndexCalculator is IIndexCalculator {
 		IIndex.OracleStorage memory oracleData,
 		IIndex.IndexStorage memory indexData,
 		uint256 /*indexId*/
-	) external view returns (int256) {
+	) external view isIndexContract returns (int256) {
 		int256 spot = 0;
 		for (uint256 i = 0; i < indexData.strikes.length; i++) {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
@@ -46,7 +59,7 @@ contract AbsoluteIndexCalculator is IIndexCalculator {
 }
 
 // Calculates relative change in index
-contract RelativeIndexCalculator is IIndexCalculator {
+contract RelativeSpotIndexCalculator is IndexCalculator {
 	enum CalculationStyle {
 		average,
 		min,
@@ -54,17 +67,13 @@ contract RelativeIndexCalculator is IIndexCalculator {
 	}
 	mapping(uint256 => CalculationStyle) private relativeCalculationStyle;
 
-	constructor() {}
-
-	function setRelativeCalculationStyle(CalculationStyle style, uint256 indexId) public {
-		relativeCalculationStyle[indexId] = style;
-	}
+	constructor(address indexContract) IndexCalculator(indexContract) {}
 
 	function prepareNewIndex(
 		uint256, /*numOfComponents*/
 		uint256 indexId,
 		int256[] calldata params
-	) external {
+	) external isIndexContract {
 		// For relative change we don't need to store any data as the latest spot value is used
 		relativeCalculationStyle[indexId] = CalculationStyle(params[0]);
 	}
@@ -76,7 +85,7 @@ contract RelativeIndexCalculator is IIndexCalculator {
 		IIndex.OracleStorage memory oracleData,
 		IIndex.IndexStorage memory indexData,
 		uint256 indexId
-	) external view returns (int256) {
+	) external view isIndexContract returns (int256) {
 		int256 relativeSpot = 0;
 
 		CalculationStyle style = relativeCalculationStyle[indexId];
