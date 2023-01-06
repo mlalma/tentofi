@@ -13,6 +13,7 @@ describe("Fix tests", function () {
     let spotFixMul: SpotFixMul;
     let oracles: Array<MockOracle>;
     let oracleAddresses: Array<string>;
+    const vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     const ORACLE_COUNT = 5;
 
@@ -22,7 +23,6 @@ describe("Fix tests", function () {
         spotFixPlus = await createSpotFixPlus();
         spotFixMul = await createSpotFixMul();
 
-        const vals = [1, 2, 3, 4, 5, 6];
         oracles = new Array<MockOracle>();
         oracleAddresses = new Array<string>();
         for (let i = 0; i < ORACLE_COUNT; i++) {
@@ -47,10 +47,34 @@ describe("Fix tests", function () {
             for (let i = 0; i < ORACLE_COUNT; i++) {
                 fixVals.push(i);
             }
-            
+
             const strikes = await noFix.fixStrikes(oracleAddresses, fixVals);
-            for (let i = 0; i < ORACLE_COUNT; i++) {                
+            for (let i = 0; i < ORACLE_COUNT; i++) {
                 expect(fixVals[i]).to.equal(strikes[i]);
+            }
+        });
+    });
+
+    describe("SpotFix tests", function () {
+        it("Should not succeed", async function () {
+            for (let i = 0; i < ORACLE_COUNT; i++) {
+                await oracles[i].modifyPos(8);
+            }
+
+            const strikes = await spotFix.fixStrikes(oracleAddresses, []);
+            for (let i = 0; i < ORACLE_COUNT; i++) {
+                expect(strikes[i]).to.not.equal(vals[i]);
+            }
+        });
+
+        it("Should set strikes correctly", async function () {
+            for (let i = 0; i < ORACLE_COUNT; i++) {
+                await oracles[i].modifyPos(i);
+            }
+
+            const strikes = await spotFix.fixStrikes(oracleAddresses, []);
+            for (let i = 0; i < ORACLE_COUNT; i++) {
+                expect(strikes[i]).to.equal(vals[i]);
             }
         });
     });
