@@ -26,7 +26,7 @@ contract SpotFix is IIndexFix {
 	function fixStrikes(
 		AggregatorV3Interface[] calldata oracles,
 		int256[] calldata /*fixParams*/
-	) external view virtual returns (int256[] memory strikes) {
+	) public view virtual returns (int256[] memory strikes) {
 		strikes = new int256[](oracles.length);
 		for (uint256 i = 0; i < oracles.length; i++) {
 			(, int256 price, , , ) = oracles[i].latestRoundData();
@@ -40,12 +40,12 @@ contract SpotFixPlus is SpotFix {
 	constructor() SpotFix() {}
 
 	function fixStrikes(AggregatorV3Interface[] calldata oracles, int256[] calldata fixParams)
-		external
+		public
 		view
 		override
 		returns (int256[] memory strikes)
 	{
-		strikes = SpotFix(this).fixStrikes(oracles, fixParams);
+		strikes = super.fixStrikes(oracles, fixParams);
 		require(strikes.length == fixParams.length);
 		for (uint256 i = 0; i < strikes.length; i++) {
 			strikes[i] += fixParams[i];
@@ -58,15 +58,34 @@ contract SpotFixMul is SpotFix {
 	constructor() SpotFix() {}
 
 	function fixStrikes(AggregatorV3Interface[] calldata oracles, int256[] calldata fixParams)
-		external
+		public
 		view
 		override
 		returns (int256[] memory strikes)
 	{
-		strikes = SpotFix(this).fixStrikes(oracles, fixParams);
+		strikes = super.fixStrikes(oracles, fixParams);
 		require(strikes.length == fixParams.length);
 		for (uint256 i = 0; i < strikes.length; i++) {
 			strikes[i] = (strikes[i] * fixParams[i]) >> 16;
+		}
+	}
+}
+
+// "Spotfix-mul-plus" index fix: The strikes are spots times a constant per strike plus constant. Mul number must be in 240.16 fixed point format
+// The order in fixParams is [mul for strike 0, add for strike 0, mul for strike 1, add for strike 1, ...]
+contract SpotFixMulPlus is SpotFix {
+	constructor() SpotFix() {}
+
+	function fixStrikes(AggregatorV3Interface[] calldata oracles, int256[] calldata fixParams)
+		public
+		view
+		override
+		returns (int256[] memory strikes)
+	{
+		strikes = super.fixStrikes(oracles, fixParams);
+		require(2 * strikes.length == fixParams.length);
+		for (uint256 i = 0; i < strikes.length; i++) {
+			strikes[i] = fixParams[i * 2 + 1] + ((strikes[i] * fixParams[i * 2]) >> 16);
 		}
 	}
 }

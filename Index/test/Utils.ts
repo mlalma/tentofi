@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixPlus } from "../typechain-types";
+import { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
 
 export async function createNoFix(): Promise<NoFix> {
     const noFix = await (await ethers.getContractFactory("NoFix")).deploy() as NoFix;
@@ -23,6 +23,12 @@ export async function createSpotFixMul(): Promise<SpotFixMul> {
     const spotFixMul = await (await ethers.getContractFactory("SpotFixMul")).deploy() as SpotFixMul;
     await spotFixMul.deployed();
     return spotFixMul;
+}
+
+export async function createSpotFixMulPlus(): Promise<SpotFixMulPlus> {
+    const spotFixMulPlus = await (await ethers.getContractFactory("SpotFixMulPlus")).deploy() as SpotFixMulPlus;
+    await spotFixMulPlus.deployed();
+    return spotFixMulPlus;
 }
 
 export async function createMockOracle(): Promise<MockOracle> {
