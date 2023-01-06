@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
+import { AbsoluteSpotIndexCalculator, Index, MockOracle, NoFix, RelativeSpotIndexCalculator, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
 
 export async function createNoFix(): Promise<NoFix> {
     const noFix = await (await ethers.getContractFactory("NoFix")).deploy() as NoFix;
@@ -29,6 +29,24 @@ export async function createSpotFixMulPlus(): Promise<SpotFixMulPlus> {
     const spotFixMulPlus = await (await ethers.getContractFactory("SpotFixMulPlus")).deploy() as SpotFixMulPlus;
     await spotFixMulPlus.deployed();
     return spotFixMulPlus;
+}
+
+export async function createIndexContract(): Promise<Index> {
+    const index = await (await ethers.getContractFactory("Index")).deploy() as Index;
+    await index.deployed();
+    return index;
+}
+
+export async function createAbsoluteSpotIndexCalculator(index: string): Promise<AbsoluteSpotIndexCalculator> {
+    const calculator = await (await ethers.getContractFactory("AbsoluteSpotIndexCalculator")).deploy(index) as AbsoluteSpotIndexCalculator;
+    await calculator.deployed();
+    return calculator;
+}
+
+export async function createRelativeSpotIndexCalculator(index: string): Promise<RelativeSpotIndexCalculator> {
+    const calculator = await (await ethers.getContractFactory("RelativeSpotIndexCalculator")).deploy(index) as RelativeSpotIndexCalculator;
+    await calculator.deployed();
+    return calculator;
 }
 
 export async function createMockOracle(): Promise<MockOracle> {

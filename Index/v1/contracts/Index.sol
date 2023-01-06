@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Contains the logic for ndices, i.e. the value of the index is calculated from spot prices
 contract Index is IIndex, ReentrancyGuard {
-	mapping(bytes32 => OracleStorage) private oracleStorage;
-	mapping(uint256 => IndexStorage) private indices;
-	uint256 private indexCounter = 1;
+	mapping(bytes32 => OracleStorage) public oracleStorage;
+	mapping(uint256 => IndexStorage) public indices;
+	uint256 public indexCounter = 1;
 
 	constructor() {}
 

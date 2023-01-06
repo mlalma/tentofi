@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Index.sol";
 import "../interfaces/IIndexCalculator.sol";
+import "hardhat/console.sol";
 
 int8 constant SPOT_DECIMAL_COUNT = 10;
 int256 constant SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
@@ -16,7 +17,7 @@ abstract contract IndexCalculator is IIndexCalculator {
 	}
 
 	modifier isIndexContract() {
-		require(msg.sender == _indexContract);
+		require(msg.sender == _indexContract, "No access rights");
 		_;
 	}
 }

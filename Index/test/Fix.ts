@@ -6,7 +6,6 @@ import { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } f
 import { createMockOracle, createNoFix, createSpotFix, createSpotFixMul, createSpotFixMulPlus, createSpotFixPlus } from "./Utils";
 
 describe("Fix tests", function () {
-
     let noFix: NoFix;
     let spotFix: SpotFix;
     let spotFixPlus: SpotFixPlus;
