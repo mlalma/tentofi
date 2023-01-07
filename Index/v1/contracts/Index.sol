@@ -8,19 +8,35 @@ import "../interfaces/IIndexFix.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Contains the logic for ndices, i.e. the value of the index is calculated from spot prices
-contract Index is IIndex, ReentrancyGuard {
+contract IndexTracker is IIndex, ReentrancyGuard {
 	mapping(bytes32 => OracleStorage) public oracleStorage;
 	mapping(uint256 => IndexStorage) public indices;
 	uint256 public indexCounter = 1;
 
 	constructor() {}
 
+	function calculateOracleIndex(
+		address[] calldata oracleAddresses,
+		IIndexCalculator calculator,
+		IIndexFix fix
+	) public pure returns (bytes32) {
+		return keccak256(abi.encodePacked(oracleAddresses, calculator, fix));
+	}
+
+	function getOracleStorage(bytes32 id) public view returns (OracleStorage memory) {
+		return oracleStorage[id];
+	}
+
+	function getIndexStorage(uint256 id) public view returns (IndexStorage memory) {
+		return indices[id];
+	}
+
 	function createOracleStorage(
 		address[] calldata oracleAddresses,
 		IIndexCalculator calculator,
 		IIndexFix fix
 	) public returns (bytes32 oracleIndex) {
-		oracleIndex = keccak256(abi.encodePacked(oracleAddresses, calculator, fix));
+		oracleIndex = calculateOracleIndex(oracleAddresses, calculator, fix);
 		if (oracleStorage[oracleIndex].oracles.length == 0) {
 			oracleStorage[oracleIndex].calculator = calculator;
 			oracleStorage[oracleIndex].fixStyle = fix;

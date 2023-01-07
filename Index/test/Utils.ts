@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { AbsoluteSpotIndexCalculator, Index, MockOracle, NoFix, RelativeSpotIndexCalculator, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
+import { AbsoluteSpotIndexCalculator, IndexTracker, MockOracle, NoFix, RelativeSpotIndexCalculator, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
 
 export async function createNoFix(): Promise<NoFix> {
     const noFix = await (await ethers.getContractFactory("NoFix")).deploy() as NoFix;
@@ -31,8 +31,8 @@ export async function createSpotFixMulPlus(): Promise<SpotFixMulPlus> {
     return spotFixMulPlus;
 }
 
-export async function createIndexContract(): Promise<Index> {
-    const index = await (await ethers.getContractFactory("Index")).deploy() as Index;
+export async function createIndexContract(): Promise<IndexTracker> {
+    const index = await (await ethers.getContractFactory("IndexTracker")).deploy() as IndexTracker;
     await index.deployed();
     return index;
 }
