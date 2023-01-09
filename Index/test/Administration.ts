@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IndexTracker, AbsoluteSpotIndexCalculator, IndexCalculator, RelativeSpotIndexCalculator, NoFix, MockOracle } from "../typechain-types";
-import { createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
+import { WEIGHT_MULTIPLIER, createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
 
 describe("Administration", function () {
 
@@ -34,7 +34,7 @@ describe("Administration", function () {
 
         weights = new Array<number>();
         for (let i = 0; i < ORACLE_COUNT; i++) {
-            weights.push(100 / ORACLE_COUNT);
+            weights.push(WEIGHT_MULTIPLIER / ORACLE_COUNT);
         }
     });
 

@@ -8,6 +8,7 @@ import "hardhat/console.sol";
 
 int8 constant SPOT_DECIMAL_COUNT = 10;
 int256 constant SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
+int16 constant WEIGHT_MULTIPLIER = 10000;
 
 abstract contract IndexCalculator is IIndexCalculator {
 	address private immutable _indexContract;
@@ -36,7 +37,7 @@ contract AbsoluteSpotIndexCalculator is IndexCalculator {
 
 	// Calculates absolute difference between spot price and strike of the index
 	// Note For multiple underlyings this mignt not make whole lot of sense, use RelativeIndexCalculator instead
-	// Note This should be used for tracking single underlying and setting the weights[0] to 100
+	// Note This should be used for tracking single underlying and setting the weights[0] to WEIGHT_MULTIPLIER
 	// Note function returns the value standardized to 10 decimal points (thus 1 is 10000000000)
 	function calculateIndex(
 		IIndex.OracleStorage memory oracleData,
@@ -53,7 +54,7 @@ contract AbsoluteSpotIndexCalculator is IndexCalculator {
 			} else if (decimalDiff < 0) {
 				diff *= int256(10**uint8(-decimalDiff));
 			}
-			spot += (diff * int256(indexData.weights[i])) / 100;
+			spot += (diff * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
 		}
 		return spot;
 	}
@@ -80,7 +81,7 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 	}
 
 	// Calculates relative difference between spot price and strike of the index
-	// Note function returns the value standardized to 10 decimal points (thus 100.0% increase is 10000000000)
+	// Note function returns the value standardized to 10 decimal points (thus 100.0% up is 10000000000)
 	// Note for multiple underlyings, define weights to appropriately calculate the index
 	function calculateIndex(
 		IIndex.OracleStorage memory oracleData,
@@ -100,7 +101,7 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
 			int256 relativePrice = ((price * SPOT_MULTIPLIER) / indexData.strikes[i]) - SPOT_MULTIPLIER;
 			if (style == CalculationStyle.average) {
-				relativeSpot += (relativePrice * int256(indexData.weights[i])) / 100;
+				relativeSpot += (relativePrice * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
 			} else if (style == CalculationStyle.min && relativePrice < relativeSpot) {
 				relativeSpot = relativePrice;
 			} else if (style == CalculationStyle.max && relativePrice > relativeSpot) {

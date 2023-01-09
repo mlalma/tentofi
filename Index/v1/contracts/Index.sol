@@ -48,7 +48,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 
 	function createSpotIndex(
 		bytes32 oracleIndex,
-		int8[] calldata weights,
+		int16[] calldata weights,
 		int256[] calldata calculatorParams
 	) public nonReentrant returns (uint256) {
 		require(oracleStorage[oracleIndex].oracles.length == weights.length);
@@ -70,7 +70,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		uint32 markCount,
 		uint64 minDeltaBetweenMarkings,
 		bytes32 oracleIndex,
-		int8[] calldata weights,
+		int16[] calldata weights,
 		int256[] calldata calculatorParams
 	) public nonReentrant returns (uint256) {
 		require(oracleStorage[oracleIndex].oracles.length == weights.length);

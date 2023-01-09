@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IndexTracker, AbsoluteSpotIndexCalculator, IndexCalculator, RelativeSpotIndexCalculator, NoFix, MockOracle } from "../typechain-types";
-import { createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
+import { WEIGHT_MULTIPLIER, createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("Calculators", function () {
@@ -35,7 +35,7 @@ describe("Calculators", function () {
 
         weights = new Array<number>();
         for (let i = 0; i < ORACLE_COUNT; i++) {
-            weights.push(100 / ORACLE_COUNT);
+            weights.push(WEIGHT_MULTIPLIER / ORACLE_COUNT);
         }
     });
 
@@ -43,7 +43,7 @@ describe("Calculators", function () {
 
         it("Should correctly calculate the position of single underlying index", async function () {
             let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
-            oracleVals.forEach((value, index, array) => { value * Math.pow(10, 6) });
+            oracleVals.forEach((value, _index, _array) => { value * Math.pow(10, 6) });
             await oracles[0].setVals(oracleVals);
 
             // Create oracle storage
@@ -53,7 +53,7 @@ describe("Calculators", function () {
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
 
             // Create spot index
-            await index.createSpotIndex(oracleStg1, [100], []);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], []);
 
             // Fix the index to be able to start calculating the index value properly
             await index.fixIndex(1, [0])

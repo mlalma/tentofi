@@ -1,6 +1,8 @@
 import { ethers } from "hardhat";
 import { AbsoluteSpotIndexCalculator, IndexTracker, MockOracle, NoFix, RelativeSpotIndexCalculator, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
 
+export const WEIGHT_MULTIPLIER = 10000;
+
 export async function createNoFix(): Promise<NoFix> {
     const noFix = await (await ethers.getContractFactory("NoFix")).deploy() as NoFix;
     await noFix.deployed();

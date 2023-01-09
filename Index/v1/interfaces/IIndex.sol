@@ -20,6 +20,6 @@ interface IIndex {
 		bytes32 oracleIndex;
 		int256 currentIndexValue;
 		int256[] strikes;
-		int8[] weights;
+		int16[] weights;
 	}
 }
