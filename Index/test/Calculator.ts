@@ -4,8 +4,9 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IndexTracker, AbsoluteSpotIndexCalculator, IndexCalculator, RelativeSpotIndexCalculator, NoFix, MockOracle } from "../typechain-types";
 import { createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("Calculators", function() {
+describe("Calculators", function () {
 
     let index: IndexTracker;
     let absoluteSpotCalculator: AbsoluteSpotIndexCalculator;
@@ -18,7 +19,7 @@ describe("Calculators", function() {
 
     let weights: Array<number>;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         index = await createIndexContract();
         absoluteSpotCalculator = await createAbsoluteSpotIndexCalculator(index.address);
         relativeSpotCalculator = await createRelativeSpotIndexCalculator(index.address);
@@ -38,19 +39,35 @@ describe("Calculators", function() {
         }
     });
 
-    describe("AbsoluteSpotIndexCalculator", function() {
-        
-        it("Should correctly calculate the position", async function() {
-            await index.createOracleStorage(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
+    describe("AbsoluteSpotIndexCalculator", function () {
 
-            const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
+        it("Should correctly calculate the position of single underlying index", async function () {
+            let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
+            oracleVals.forEach((value, index, array) => { value * Math.pow(10, 6) });
+            await oracles[0].setVals(oracleVals);
 
-            await index.createSpotIndex(oracleStg1, weights, []);
+            // Create oracle storage
+            await index.createOracleStorage([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
 
+            // Get the calculated oracle index
+            const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
+
+            // Create spot index
+            await index.createSpotIndex(oracleStg1, [100], []);
+
+            // Fix the index to be able to start calculating the index value properly
+            await index.fixIndex(1, [0])
+
+            // Get indices
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
             const indexStorage1 = await index.getIndexStorage(1);
 
-            await absoluteSpotCalculator.connect(index.address).calculateIndex(oracleStorage1, indexStorage1, 1);
+            for (let i = 0; i < oracleVals.length; i++) {
+                await time.increase(1);
+                const val = await absoluteSpotCalculator.connect(index.address).calculateIndex(oracleStorage1, indexStorage1, 1);
+                expect(val).to.eq(oracleVals[i] * Math.pow(10, 4));
+                await oracles[0].increasePos();
+            }
         });
     });
 });

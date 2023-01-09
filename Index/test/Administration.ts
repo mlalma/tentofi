@@ -34,7 +34,7 @@ describe("Administration", function () {
 
         weights = new Array<number>();
         for (let i = 0; i < ORACLE_COUNT; i++) {
-            weights.push(100/ORACLE_COUNT);
+            weights.push(100 / ORACLE_COUNT);
         }
     });
 
@@ -55,7 +55,7 @@ describe("Administration", function () {
 
             await index.createSpotIndex(oracleStg1, weights, []);
             await index.createSpotIndex(oracleStg2, weights, [0]);
-            
+
             const indexStorage1 = await index.getIndexStorage(1);
             const indexStorage2 = await index.getIndexStorage(2);
 

@@ -112,15 +112,11 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	function calculateIndex(uint256 indexId) public nonReentrant returns (int256 indexValue) {
 		IndexStorage storage index = indices[indexId];
 
-		require(index.markingStartTimestamp >= 0);
-
-		if (
-			index.markCount == 0 ||
-			(index.minDeltaBetweenMarkings > 0 &&
-				(index.markingPrevTimestamp + index.minDeltaBetweenMarkings < block.timestamp))
-		) {
-			return index.currentIndexValue;
-		}
+		require(index.markingStartTimestamp > 0);
+		require(
+			index.markCount >= 0 && (index.markingPrevTimestamp + index.minDeltaBetweenMarkings > block.timestamp),
+			"All the marks used or delta between calls too short"
+		);
 
 		indexValue = oracleStorage[index.oracleIndex].calculator.calculateIndex(
 			oracleStorage[index.oracleIndex],
