@@ -4,6 +4,7 @@ import { AbsoluteSpotIndexCalculator, IndexTracker, MockOracle, NoFix, RelativeS
 export const WEIGHT_MULTIPLIER = 10000;
 export const SPOT_DECIMAL_COUNT = 10;
 export const SPOT_MULTIPLIER = 10 ** SPOT_DECIMAL_COUNT;
+export const VALUE_MULTIPLIER = 10 ** 6;
 
 export async function createNoFix(): Promise<NoFix> {
     const noFix = await (await ethers.getContractFactory("NoFix")).deploy() as NoFix;

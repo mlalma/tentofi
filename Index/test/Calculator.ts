@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { IndexTracker, AbsoluteSpotIndexCalculator, IndexCalculator, RelativeSpotIndexCalculator, NoFix, MockOracle } from "../typechain-types";
-import { SPOT_MULTIPLIER, WEIGHT_MULTIPLIER, createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator } from "./Utils";
+import { SPOT_MULTIPLIER, WEIGHT_MULTIPLIER, createAbsoluteSpotIndexCalculator, createIndexContract, createMockOracle, createNoFix, createRelativeSpotIndexCalculator, VALUE_MULTIPLIER } from "./Utils";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("Calculators", function () {
@@ -42,7 +42,7 @@ describe("Calculators", function () {
     describe("AbsoluteSpotIndexCalculator", function () {
         it("Should correctly calculate the value of a single underlying index", async function () {
             let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
 
             // Create oracle storage
@@ -73,8 +73,8 @@ describe("Calculators", function () {
             let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
             let oracleVals2 = [0, 2, -2, 3, -7, 5, -6, 5, -8, 9, -15];
 
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
             await oracles[1].setVals(oracleVals2);
 
@@ -100,9 +100,9 @@ describe("Calculators", function () {
             let oracleVals2 = [0, 2, -2, 3, -7, 5, -6, 5, -8, 9, -15];
             let oracleVals3 = [10, 42, -12, 33, -27, 35, -46, 55, -78, 89, -115];
 
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals3 = oracleVals3.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals3 = oracleVals3.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
             await oracles[1].setVals(oracleVals2);
             await oracles[2].setVals(oracleVals3);
@@ -110,7 +110,7 @@ describe("Calculators", function () {
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], absoluteSpotCalculator.address, noFix.address);
             await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], []);
-            await index.fixIndex(1, [10 * Math.pow(10, 6), -2 * Math.pow(10, 6), 3 * Math.pow(10, 6)]);
+            await index.fixIndex(1, [10 * VALUE_MULTIPLIER, -2 * VALUE_MULTIPLIER, 3 * VALUE_MULTIPLIER]);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
             const indexStorage1 = await index.getIndexStorage(1);
@@ -134,7 +134,7 @@ describe("Calculators", function () {
     describe("RelativeSpotIndexCalculator", function () {
         it("Should correctly calculate the value of a single underlying index", async function () {
             let oracleVals: Array<number> = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
 
             await oracles[0].setVals(oracleVals);
 
@@ -143,7 +143,7 @@ describe("Calculators", function () {
 
             await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [0]);
 
-            const FIX = 2 * 10 ** 6;
+            const FIX = 2 * VALUE_MULTIPLIER;
             await index.fixIndex(1, [FIX]);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
@@ -193,9 +193,9 @@ describe("Calculators", function () {
             let oracleVals2 = [0, 2, -2, 3, -7, 5, -6, 5, -8, 9, -15];
             let oracleVals3 = [10, 42, -12, 33, -27, 35, -46, 55, -78, 89, -115];
 
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals3 = oracleVals3.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals3 = oracleVals3.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
             await oracles[1].setVals(oracleVals2);
             await oracles[2].setVals(oracleVals3);
@@ -203,7 +203,7 @@ describe("Calculators", function () {
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], relativeSpotCalculator.address, noFix.address);
             await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], [0]);
-            const fixes = [10 * Math.pow(10, 6), -2 * Math.pow(10, 6), 3 * Math.pow(10, 6)];
+            const fixes = [10 * VALUE_MULTIPLIER, -2 * VALUE_MULTIPLIER, 3 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
@@ -228,8 +228,8 @@ describe("Calculators", function () {
             let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
             let oracleVals2 = [0, 2, -2, 3, -7, 5, -6, 5, -8, 9, -15];
 
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
             await oracles[1].setVals(oracleVals2);
 
@@ -237,7 +237,7 @@ describe("Calculators", function () {
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
             await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [1]);
 
-            const fixes = [2 * 10 ** 6, 4 * 10 ** 6];
+            const fixes = [2 * VALUE_MULTIPLIER, 4 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
@@ -259,8 +259,8 @@ describe("Calculators", function () {
             let oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
             let oracleVals2 = [0, 2, -2, 3, -7, 5, -6, 5, -8, 9, -15];
 
-            oracleVals = oracleVals.map((value, _index, _array) => { return value * Math.pow(10, 6); });
-            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * Math.pow(10, 6); });
+            oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
+            oracleVals2 = oracleVals2.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
             await oracles[0].setVals(oracleVals);
             await oracles[1].setVals(oracleVals2);
 
@@ -268,7 +268,7 @@ describe("Calculators", function () {
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
             await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [2]);
 
-            const fixes = [2 * 10 ** 6, 4 * 10 ** 6];
+            const fixes = [2 * VALUE_MULTIPLIER, 4 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);

@@ -118,7 +118,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		require(msg.sender == index.owner);
 		require(index.markingStartTimestamp > 0);
 		require(
-			index.markCount >= 0 && (index.markingPrevTimestamp + index.minDeltaBetweenMarkings > block.timestamp),
+			index.markCount >= 0 && (index.markingPrevTimestamp + index.minDeltaBetweenMarkings < block.timestamp),
 			"All the marks used or delta between calls too short"
 		);
 
