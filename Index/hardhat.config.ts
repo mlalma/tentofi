@@ -1,4 +1,3 @@
-import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-ethers";
 
@@ -22,9 +21,11 @@ module.exports = {
     hardhat: {
       allowUnlimitedContractSize: true
     },
+    /*
     polygon_mumbai: {
       url: API_URL,
       accounts: [`0x${PRIVATE_KEY}`]
     }
+    */
   }
 }
