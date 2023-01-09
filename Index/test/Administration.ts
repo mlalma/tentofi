@@ -50,12 +50,12 @@ describe("Administration", function () {
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStg2 = await index.calculateOracleIndex(oracleAddresses, relativeSpotCalculator.address, noFix.address);
 
-            await index.createSpotIndex(oracleStg1, weights, []);
-            await index.createSpotIndex(oracleStg2, weights, [0]);
-            
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
             const oracleStorage2 = await index.getOracleStorage(oracleStg2);
 
+            await index.createSpotIndex(oracleStg1, weights, []);
+            await index.createSpotIndex(oracleStg2, weights, [0]);
+            
             const indexStorage1 = await index.getIndexStorage(1);
             const indexStorage2 = await index.getIndexStorage(2);
 
