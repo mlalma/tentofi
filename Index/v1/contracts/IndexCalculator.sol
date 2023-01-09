@@ -100,8 +100,9 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 		for (uint256 i = 0; i < indexData.strikes.length; i++) {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
 			int256 relativePrice = ((price * SPOT_MULTIPLIER) / indexData.strikes[i]) - SPOT_MULTIPLIER;
+			relativePrice = (relativePrice * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
 			if (style == CalculationStyle.average) {
-				relativeSpot += (relativePrice * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
+				relativeSpot += relativePrice;
 			} else if (style == CalculationStyle.min && relativePrice < relativeSpot) {
 				relativeSpot = relativePrice;
 			} else if (style == CalculationStyle.max && relativePrice > relativeSpot) {
