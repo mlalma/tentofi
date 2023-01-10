@@ -1,12 +1,33 @@
 {
-  "name": "tento-indexfactory",
+  "name": "tento-index",
   "version": "1.0.0",
-  "description": "Create indices used to track values of underlyings in e.g. OTC derivatives",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "Manages indices used to track values of underlyings in e.g. OTC derivatives",
   "author": "mla_lma",
-  "license": "ISC",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/mlalma/tentofi/blob/main/Index/README.md",
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "otc",
+    "index",
+    "trading"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlalma/tentofi"
+  },
+  "bugs": {
+    "url": "https://github.com/mlalma/tentofi/issues"
+  },
+  "files": [
+    "v1/contracts",
+    "v1/interfaces",
+    "artifacts/v1/contracts",
+    "artifacts/v1/interfaces"
+  ],
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "hardhat": "^2.12.5"

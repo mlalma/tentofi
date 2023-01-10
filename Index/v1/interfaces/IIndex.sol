@@ -8,7 +8,7 @@ import "./IIndexFix.sol";
 interface IIndex {
 	struct OracleStorage {
 		AggregatorV3Interface[] oracles;
-		IIndexCalculator calculator;
+		IndexCalculator calculator;
 		IIndexFix fixStyle;
 	}
 

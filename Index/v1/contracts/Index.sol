@@ -7,7 +7,15 @@ import "../interfaces/IIndexCalculator.sol";
 import "../interfaces/IIndexFix.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// Contains the logic for indices, i.e. the value of the index is calculated from spot prices
+// Contains the logic for calculating index values.
+// The value of an index is calculated from prices of one or more sources.
+// The sources are Chainlink oracles.
+// Before index can be calculated it needs to be "fixed" to a start value.
+// There are different kind of ways to fix the start value, see IndexFix.sol and IIndexFix.sol
+// Once the fixing has happened, the index value can be calculated.
+// There are multiple different ways to calculate an Index value, see IndexCalculator.sol and IIndexCalculator.sol
+// Path-dependent products are supported by adding calculators that save the state when calculateIndex() is called
+// Adding new calculators by deriving from IIndexCalculator is an easy way to create indices for complex products
 contract IndexTracker is IIndex, ReentrancyGuard {
 	mapping(bytes32 => OracleStorage) public oracleStorage;
 	mapping(uint256 => IndexStorage) public indices;
@@ -20,25 +28,30 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 
 	constructor() {}
 
+	// Returns oracle index mapped to oracleStorage
 	function calculateOracleIndex(
 		address[] calldata oracleAddresses,
-		IIndexCalculator calculator,
+		IndexCalculator calculator,
 		IIndexFix fix
 	) public pure returns (bytes32) {
 		return keccak256(abi.encodePacked(oracleAddresses, calculator, fix));
 	}
 
+	// Returns oracle storage element (for testing)
 	function getOracleStorage(bytes32 id) public view returns (OracleStorage memory) {
 		return oracleStorage[id];
 	}
 
+	// Returns index storage element (for testing)
 	function getIndexStorage(uint256 id) public view returns (IndexStorage memory) {
 		return indices[id];
 	}
 
+	// Checks if oracle storage exists and if not then creates new one.
+	// Oracle storage element consists
 	function createOracleStorage(
 		address[] calldata oracleAddresses,
-		IIndexCalculator calculator,
+		IndexCalculator calculator,
 		IIndexFix fix
 	) public returns (bytes32 oracleIndex) {
 		oracleIndex = calculateOracleIndex(oracleAddresses, calculator, fix);
@@ -52,6 +65,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		}
 	}
 
+	// Creates spot index. Spot index is a special kind of index where mark-to-market markings can be done on every block
 	function createSpotIndex(
 		bytes32 oracleIndex,
 		int16[] calldata weights,
@@ -74,7 +88,8 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		return indexCounter - 1;
 	}
 
-	// minDeltaBetweenMarkings is in seconds
+	// Creates a general index. markCount is the maximum number of times index calculation can be performed during the lifetime of the contract
+	// minDeltaBetweenMarkings is in seconds and defines what is the minimum delta between two calculations (in seconds)
 	function createIndex(
 		uint32 markCount,
 		uint64 minDeltaBetweenMarkings,
@@ -99,6 +114,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		return indexCounter - 1;
 	}
 
+	// Fixes the index so that an index value can be calculated
 	function fixIndex(uint256 indexId, int256[] calldata fixStyleParams) public nonReentrant {
 		IndexStorage storage index = indices[indexId];
 
@@ -122,6 +138,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		emit IndexFixed(indexId);
 	}
 
+	// Calculates the index value that can be used for mark-to-market / settlement purposes
 	// forceCalculation can be used to force the final settlement value after the contract has run its course
 	function calculateIndex(uint256 indexId, bool forceCalculation) public nonReentrant returns (int256 indexValue) {
 		IndexStorage storage index = indices[indexId];

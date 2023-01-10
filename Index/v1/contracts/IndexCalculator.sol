@@ -10,19 +10,6 @@ int8 constant SPOT_DECIMAL_COUNT = 10;
 int256 constant SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
 int16 constant WEIGHT_MULTIPLIER = 10000;
 
-abstract contract IndexCalculator is IIndexCalculator {
-	address private immutable _indexContract;
-
-	constructor(address indexContract) {
-		_indexContract = indexContract;
-	}
-
-	modifier isIndexContract() {
-		require(msg.sender == _indexContract, "No access rights");
-		_;
-	}
-}
-
 // Calculates absolute change in index
 contract AbsoluteSpotIndexCalculator is IndexCalculator {
 	constructor(address indexContract) IndexCalculator(indexContract) {}
@@ -31,7 +18,7 @@ contract AbsoluteSpotIndexCalculator is IndexCalculator {
 		uint256, /*numOfComponents*/
 		uint256, /*indexId*/
 		int256[] calldata params
-	) external isIndexContract {
+	) public override isIndexContract {
 		// For absolute change we don't need to store any data as the latest spot value is used
 	}
 
@@ -43,7 +30,7 @@ contract AbsoluteSpotIndexCalculator is IndexCalculator {
 		IIndex.OracleStorage memory oracleData,
 		IIndex.IndexStorage memory indexData,
 		uint256 /*indexId*/
-	) external view isIndexContract returns (int256) {
+	) public view override isIndexContract returns (int256) {
 		int256 spot = 0;
 		for (uint256 i = 0; i < indexData.strikes.length; i++) {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
@@ -75,7 +62,7 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 		uint256, /*numOfComponents*/
 		uint256 indexId,
 		int256[] calldata params
-	) external isIndexContract {
+	) public override isIndexContract {
 		// For relative change we don't need to store any data as the latest spot value is used
 		relativeCalculationStyle[indexId] = CalculationStyle(params[0]);
 	}
@@ -87,7 +74,7 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 		IIndex.OracleStorage memory oracleData,
 		IIndex.IndexStorage memory indexData,
 		uint256 indexId
-	) external view isIndexContract returns (int256) {
+	) public view override isIndexContract returns (int256) {
 		int256 relativeSpot = 0;
 
 		CalculationStyle style = relativeCalculationStyle[indexId];

@@ -21,11 +21,9 @@ module.exports = {
     hardhat: {
       allowUnlimitedContractSize: true
     },
-    /*
     polygon_mumbai: {
       url: API_URL,
       accounts: [`0x${PRIVATE_KEY}`]
     }
-    */
   }
 }
