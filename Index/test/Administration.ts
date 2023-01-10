@@ -83,8 +83,8 @@ describe("Administration", function () {
             await expect(index.connect(bob).fixIndex(1, a)).to.be.reverted;
             await index.fixIndex(1, a);
 
-            await expect(index.connect(bob).calculateIndex(1)).to.be.reverted;
-            await index.calculateIndex(1);
+            await expect(index.connect(bob).calculateIndex(1, false)).to.be.reverted;
+            await index.calculateIndex(1, false);
 
             const testIndex = await index.getIndexStorage(1);
             expect(testIndex.currentIndexValue).to.be.eq(-SPOT_MULTIPLIER);

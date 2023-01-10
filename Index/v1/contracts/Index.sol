@@ -7,11 +7,16 @@ import "../interfaces/IIndexCalculator.sol";
 import "../interfaces/IIndexFix.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// Contains the logic for ndices, i.e. the value of the index is calculated from spot prices
+// Contains the logic for indices, i.e. the value of the index is calculated from spot prices
 contract IndexTracker is IIndex, ReentrancyGuard {
 	mapping(bytes32 => OracleStorage) public oracleStorage;
 	mapping(uint256 => IndexStorage) public indices;
 	uint256 public indexCounter = 1;
+
+	event OracleStorageCreated(bytes32 oracleIndex);
+	event SpotIndexCreated(uint256 indexCounter);
+	event IndexCreated(uint256 indexCounter);
+	event IndexFixed(uint256 indexCounter);
 
 	constructor() {}
 
@@ -43,6 +48,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 			for (uint256 i = 0; i < oracleAddresses.length; i++) {
 				oracleStorage[oracleIndex].oracles.push(AggregatorV3Interface(oracleAddresses[i]));
 			}
+			emit OracleStorageCreated(oracleIndex);
 		}
 	}
 
@@ -62,11 +68,13 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		indices[indexCounter] = index;
 
 		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
+		emit SpotIndexCreated(indexCounter);
 
 		indexCounter += 1;
 		return indexCounter - 1;
 	}
 
+	// minDeltaBetweenMarkings is in seconds
 	function createIndex(
 		uint32 markCount,
 		uint64 minDeltaBetweenMarkings,
@@ -85,6 +93,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		indices[indexCounter] = index;
 
 		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
+		emit IndexCreated(indexCounter);
 
 		indexCounter += 1;
 		return indexCounter - 1;
@@ -110,15 +119,18 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 			indexId
 		);
 		index.markingPrevTimestamp = uint64(block.timestamp);
+		emit IndexFixed(indexId);
 	}
 
-	function calculateIndex(uint256 indexId) public nonReentrant returns (int256 indexValue) {
+	// forceCalculation can be used to force the final settlement value after the contract has run its course
+	function calculateIndex(uint256 indexId, bool forceCalculation) public nonReentrant returns (int256 indexValue) {
 		IndexStorage storage index = indices[indexId];
 
 		require(msg.sender == index.owner);
 		require(index.markingStartTimestamp > 0);
 		require(
-			index.markCount >= 0 && (index.markingPrevTimestamp + index.minDeltaBetweenMarkings < block.timestamp),
+			forceCalculation ||
+				(index.markCount > 0 && (index.markingPrevTimestamp + index.minDeltaBetweenMarkings < block.timestamp)),
 			"All the marks used or delta between calls too short"
 		);
 
