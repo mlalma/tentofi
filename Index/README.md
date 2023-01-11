@@ -65,7 +65,7 @@ If you want to implement a new fixer, implement following method:
 | :--------------- | :-------------------------------------------------------------------- |
 | **fixStrikes()** | Called to fix strikes containing the oracle contracts and parameters. |
 
-### Index Calculator
+### Index Calculator
 
 Index calculators derive from base contract `IndexCalculator`. The current implementation provides following calculators:
 
@@ -83,7 +83,9 @@ If you want to implement a new calculator, following key methods to implement on
 
 Note that for both calls you should make sure that they have `isIndexContract` modifier to make sure that only registered `IndexTracker` contract can call them.
 
-## Example
+## Example
+
+TODO
 
 ## Installation
 
