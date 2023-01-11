@@ -83,11 +83,11 @@ Note that critical part when negotiating any OTC contract is setting the penalty
 
 ## Installation
 
-1. First create file called **.env** containing two constants `API_URL` and `PRIVATE_KEY`. `API_URL` is endpoint url to Mumbai Testnet node (e.g. from Alchemy) and `PRIVATE_KEY` is the wallet private key containing enough MATIC for deploying contract.
+1. First create file called **.env** containing two constants `API_URL` and `PRIVATE_KEY`. `API_URL` is endpoint url to Mumbai Testnet node (e.g. from Alchemy) and `PRIVATE_KEY` is the wallet private key containing enough (fake) MATIC for deploying contracts.
 2. Download the dependencies for the project using npm `npm install`
 3. You should now have everything for testing and deploying the contracts
 
-## Testing
+## Running Tests
 
 Run `npx hardhat test` to run all the unit tests. Make sure that all tests for all contracts pass.
 
@@ -99,6 +99,7 @@ Currently only Polygon Mumbai testnet is supported.
 
 ## Potential Improvements
 
+- Allow contract creator to define if it is going to be short party or long party
 - Novation process: Enable transferring counterparty position to a new party (if allowed by contract)
 - Provide netting to "stack" the marking-to-market of all contracts between two counterparties
 - Provide portfolio margining for increasing capital efficiency or for simply notifying parties of potential defaulting

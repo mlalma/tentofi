@@ -48,7 +48,8 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	}
 
 	// Checks if oracle storage exists and if not then creates new one.
-	// Oracle storage element consists
+	// Oracle storage element consists of oracle addresses, fixing logic and calculation logic.
+	// Oracle addresses should be ordered in array in ascending order
 	function createOracleStorage(
 		address[] calldata oracleAddresses,
 		IndexCalculator calculator,
@@ -66,6 +67,8 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	}
 
 	// Creates spot index. Spot index is a special kind of index where mark-to-market markings can be done on every block
+	// Weights can be positive or negative to create long/short positions for individual sources of a basket.
+	// For weights, 100% ("full") participation is value 10000 and e.g. 50% weight would be 5000.
 	function createSpotIndex(
 		bytes32 oracleIndex,
 		int16[] calldata weights,
@@ -89,7 +92,8 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	}
 
 	// Creates a general index. markCount is the maximum number of times index calculation can be performed during the lifetime of the contract
-	// minDeltaBetweenMarkings is in seconds and defines what is the minimum delta between two calculations (in seconds)
+	// minDeltaBetweenMarkings is in seconds and defines what is the minimum delta between two calculations (in seconds).
+	// For weights, 100% ("full") participation is value 10000 and e.g. 50% weight would be 5000.
 	function createIndex(
 		uint32 markCount,
 		uint64 minDeltaBetweenMarkings,
