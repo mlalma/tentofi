@@ -83,10 +83,6 @@ If you want to implement a new calculator, following key methods to implement on
 
 Note that for both calls you should make sure that they have `isIndexContract` modifier to make sure that only registered `IndexTracker` contract can call them.
 
-## Example
-
-TODO
-
 ## Installation
 
 1. First create file called **.env** containing two constants `API_URL` and `PRIVATE_KEY`. `API_URL` is endpoint url to Mumbai Testnet node (e.g. from Alchemy) and `PRIVATE_KEY` is the wallet private key containing enough (fake) MATIC for deploying contracts.
