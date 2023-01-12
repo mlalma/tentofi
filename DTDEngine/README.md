@@ -1,6 +1,6 @@
 # Decentralized Token Depository
 
-Decentralized Token Repository (DTD) is used for managing bilateral over-the-counter (OTC) derivatives contracts.
+Decentralized Token Depository (DTD) is used for managing bilateral over-the-counter (OTC) derivatives contracts.
 
 It handles initiation, clearing and settlement of the contracts while trying to minimize the counterparty risk for participants.
 
