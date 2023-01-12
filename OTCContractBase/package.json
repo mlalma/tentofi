@@ -1,0 +1,39 @@
+{
+  "name": "tento-otccontractbase",
+  "version": "1.0.0",
+  "description": "Base library for implementing different kinds of OTC instruments",
+  "author": "mla_lma",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/mlalma/tentofi/blob/main/OTCContractBase/README.md",
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "otc",
+    "trading"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlalma/tentofi"
+  },
+  "bugs": {
+    "url": "https://github.com/mlalma/tentofi/issues"
+  },
+  "files": [
+    "v1/contracts",
+    "v1/interfaces",
+    "artifacts/v1/contracts",
+    "artifacts/v1/interfaces"
+  ],
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "hardhat": "^2.12.6"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "tento-dtd": "^1.0.0",
+    "tento-index": "^1.0.0"
+  }
+}
