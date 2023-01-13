@@ -108,6 +108,7 @@ Currently only Polygon Mumbai testnet is supported.
 5. For timing block.timestamp is used. Is there any better way to do it, e.g., using an oracle?
 6. Index-of-indices, although these could also be constructed separately - main benefit is to use different calculators for different sub-indices
 7. Enable changing base level for supporting structured products with reset feature
+8. Explore if index calculators could be used also for calculating collateral needs during the lifetime of a contract
 
 # References
 
