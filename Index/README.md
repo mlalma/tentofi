@@ -106,7 +106,8 @@ Currently only Polygon Mumbai testnet is supported.
 3. Define minimum counts before the index calculation is "valid" or provide confidence estimation. Needed for more complex calculators
 4. Explore if on-chain protocols could provide reliable data sources, e.g., lending rates from Aave, Voltz, Sense Finance or options' prices from Lyra
 5. For timing block.timestamp is used. Is there any better way to do it, e.g., using an oracle?
-6. Index-of-indices, although these could also be constructed separately - main benefit is to use different calculators for different sub-indices.
+6. Index-of-indices, although these could also be constructed separately - main benefit is to use different calculators for different sub-indices
+7. Enable changing base level for supporting structured products with reset feature
 
 # References
 

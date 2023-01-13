@@ -15,9 +15,13 @@ abstract contract OTCContractBase is IDTDEngineContract {
         uint256 indexId;
         // Collateral calculation logic when OTC instrument is active
         ICollateralCalculator collateralCalculator;
+        int256[] collateralCalculatorParams;
         // offer end time, contract lock time and contract end time
         uint64 offerEndTime;
         uint64 contractLockTime;
         uint64 contractEndTime;
+    }
+
+    constructor() {
     }
 }
