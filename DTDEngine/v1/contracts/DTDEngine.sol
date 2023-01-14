@@ -34,8 +34,8 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		// Has to always be <= depositBalance, otherwise margin call will occur
 		uint256 minMarginLevel;
 	}
-	mapping(uint256 => Vault) private dtdVaults;
-	uint256 private dtdVaultCounter = 1;
+	mapping(uint256 => Vault) public dtdVaults;
+	uint256 public dtdVaultCounter = 1;
 
 	// Penalty margins are used per contract to incentivize counterparties to keep
 	// enough deposit balances on their Vault. If default happens then the
@@ -46,11 +46,11 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 longCounterpartyVault;
 		uint256 penaltyMarginLongCounterparty;
 		uint256 contractId;
-		address contractAddress;
+		IDTDEngineContract contractLogic;
 		int256 currentPnL;
 	}
-	mapping(uint256 => Contract) private dtdContracts;
-	uint256 private dtdContractCounter = 1;
+	mapping(uint256 => Contract) public dtdContracts;
+	uint256 public dtdContractCounter = 1;
 
 	bool private emergencyValve = false;
 
@@ -112,7 +112,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		);
 
 		Contract memory dtdContract;
-		dtdContract.contractAddress = address(newContract);
+		dtdContract.contractLogic = newContract;
 		dtdContract.contractId = contractLogicId;
 		dtdContract.shortCounterpartyVault = shortPartyVaultId;
 		dtdContract.penaltyMarginShortCounterparty = penaltyMarginShortParty;
@@ -130,7 +130,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 
 	// Locks the contract
 	function lockContract(uint256 contractId, uint64 longPartyVaultId) public whenNotPaused onlyRole(CONTRACT_ROLE) {
-		require(dtdContracts[contractId].contractAddress != address(0));
+		require(address(dtdContracts[contractId].contractLogic) != address(0));
 		require(dtdContracts[contractId].shortCounterpartyVault != 0);
 		require(tx.origin == dtdVaults[longPartyVaultId].owner);
 		require(
@@ -221,11 +221,10 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	function markToMarket(uint256 contractId) public whenNotPaused returns (int256) {
 		uint256 shortVault = dtdContracts[contractId].shortCounterpartyVault;
 		uint256 longVault = dtdContracts[contractId].longCounterpartyVault;
+		IDTDEngineContract contractLogic = dtdContracts[contractId].contractLogic;
 
-		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);
-
-		IDTDEngineContract marketContract = IDTDEngineContract(dtdContracts[contractId].contractAddress);
-		(int256 pAndL, bool settled) = marketContract.markToMarket(dtdContracts[contractId].contractId);
+		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);	
+		(int256 pAndL, bool settled) = contractLogic.markToMarket(dtdContracts[contractId].contractId);
 
 		if (longVault == 0) {
 			if (settled) {
@@ -293,7 +292,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 			}
 
 			// Notify contract so that it can also do cleanup
-			marketContract.partyHasDefaulted(dtdContracts[contractId].contractId, dtdVaults[defaultedVault].owner);
+			contractLogic.partyHasDefaulted(dtdContracts[contractId].contractId, dtdVaults[defaultedVault].owner);
 
 			// Delete contract
 			delete dtdContracts[contractId];

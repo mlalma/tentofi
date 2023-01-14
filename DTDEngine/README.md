@@ -99,14 +99,15 @@ Currently only Polygon Mumbai testnet is supported.
 
 ## Potential Improvements
 
-- Allow contract creator to define if it is going to be short party or long party
-- Novation process: Enable transferring counterparty position to a new party (if allowed by contract)
-- Provide netting to "stack" the marking-to-market of all contracts between two counterparties
-- Provide portfolio margining for increasing capital efficiency or for simply notifying parties of potential defaulting
-- Separate collateral (penalty margin) and the traded value from each other. Now they both use same token
-- Allow e.g. NFTs representing real world assets or stakes on lending pools to be used as collateral
-- Enable swapping collateral to another (if allowed by contract)
-- Trade compression: Terminate offsetting contracts among two or more participants or replace them with smaller netted out contracts
+1. Allow contract creator to define if it is going to be short party or long party
+2. Novation process: Enable transferring counterparty position to a new party (if allowed by contract)
+3. Provide netting to "stack" the marking-to-market of all contracts between two counterparties
+4. Provide portfolio margining for increasing capital efficiency or for simply notifying parties of potential defaulting
+5. Separate collateral (penalty margin) and the traded value from each other. Now they both use same token
+6. Allow e.g. NFTs representing real world assets or stakes on lending pools to be used as collateral
+7. Enable swapping collateral to another (if allowed by contract)
+8. Trade compression: Terminate offsetting contracts among two or more participants or replace them with smaller netted out contracts
+9. Limit the tokens allowed to be used as collateral
 
 # References
 
