@@ -85,6 +85,12 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		return dtdVaults[vaultId];
 	}
 
+	// Returns vault owners
+	function getVaultOwners(uint256 dtdContractId) public view returns (address shortParty, address longParty) {
+		shortParty = dtdVaults[dtdContracts[dtdContractId].shortCounterpartyVault].owner;
+		longParty = dtdVaults[dtdContracts[dtdContractId].longCounterpartyVault].owner;
+	}
+
 	// Creates new vault for a user
 	function createVault(address tokenAddr) public whenNotPaused returns (uint256) {
 		Vault memory vault;
