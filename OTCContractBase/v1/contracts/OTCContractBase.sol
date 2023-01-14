@@ -39,5 +39,11 @@ abstract contract OTCContractBase is IDTDEngineContract {
         uint64 contractEndTime;
     }
 
-    constructor() {}
+    IndexTracker immutable public indexTracker;
+    DTDEngine immutable public dtdEngine;
+
+    constructor(address indexTrackerAddr, address dtdEngineAddr) {
+        indexTracker = IndexTracker(indexTrackerAddr);
+        dtdEngine = DTDEngine(dtdEngineAddr);
+    }
 }

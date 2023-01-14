@@ -1,6 +1,6 @@
 {
   "name": "tento-otccontractbase",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Base library for implementing different kinds of OTC instruments",
   "author": "mla_lma",
   "license": "MIT",
