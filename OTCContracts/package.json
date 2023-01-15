@@ -10,11 +10,13 @@
   "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "dotenv": "^16.0.3",
     "hardhat": "^2.12.6"
   },
   "dependencies": {
-    "tento-dtd": "^1.0.0",
-    "tento-index": "^1.0.0",
-    "tento-otccontractbase": "^1.0.0"
+    "@openzeppelin/contracts": "^4.8.1",
+    "tento-dtd": "^1.0.5",
+    "tento-index": "^1.0.3",
+    "tento-otccontractbase": "^1.0.1"
   }
 }
