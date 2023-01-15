@@ -149,6 +149,8 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 				dtdVaults[longPartyVaultId].tokenAddr
 		);
 
+		require(tx.origin != dtdVaults[dtdContracts[contractId].shortCounterpartyVault].owner);
+
 		dtdContracts[contractId].longCounterpartyVault = longPartyVaultId;
 
 		// Reserve penalty margin for long party
