@@ -135,7 +135,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	}
 
 	// Locks the contract
-	function lockContract(uint256 contractId, uint64 longPartyVaultId) public whenNotPaused onlyRole(CONTRACT_ROLE) {
+	function lockContract(uint256 contractId, uint256 longPartyVaultId) public whenNotPaused onlyRole(CONTRACT_ROLE) {
 		require(address(dtdContracts[contractId].contractLogic) != address(0));
 		require(dtdContracts[contractId].shortCounterpartyVault != 0);
 		require(tx.origin == dtdVaults[longPartyVaultId].owner);
