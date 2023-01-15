@@ -7,6 +7,10 @@ import "./IIndex.sol";
 abstract contract IndexCalculator {
 	address private immutable _indexContract;
 
+	int8 constant public SPOT_DECIMAL_COUNT = 10;
+	int256 constant public SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
+	int16 constant public WEIGHT_MULTIPLIER = 10000;
+
 	constructor(address indexContract) {
 		_indexContract = indexContract;
 	}

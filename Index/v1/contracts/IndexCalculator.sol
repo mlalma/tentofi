@@ -6,10 +6,6 @@ import "./Index.sol";
 import "../interfaces/IIndexCalculator.sol";
 import "hardhat/console.sol";
 
-int8 constant SPOT_DECIMAL_COUNT = 10;
-int256 constant SPOT_MULTIPLIER = int256(10**uint8(SPOT_DECIMAL_COUNT));
-int16 constant WEIGHT_MULTIPLIER = 10000;
-
 // Calculates absolute change in index
 contract AbsoluteSpotIndexCalculator is IndexCalculator {
 	constructor(address indexContract) IndexCalculator(indexContract) {}
@@ -35,13 +31,13 @@ contract AbsoluteSpotIndexCalculator is IndexCalculator {
 		for (uint256 i = 0; i < indexData.strikes.length; i++) {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
 			int256 diff = price - indexData.strikes[i];
-			int8 decimalDiff = int8(oracleData.oracles[i].decimals()) - SPOT_DECIMAL_COUNT;
+			int8 decimalDiff = int8(oracleData.oracles[i].decimals()) - IndexCalculator.SPOT_DECIMAL_COUNT;
 			if (decimalDiff > 0) {
 				diff /= int256(10**uint8(decimalDiff));
 			} else if (decimalDiff < 0) {
 				diff *= int256(10**uint8(-decimalDiff));
 			}
-			spot += (diff * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
+			spot += (diff * int256(indexData.weights[i])) / IndexCalculator.WEIGHT_MULTIPLIER;
 		}
 		return spot;
 	}
@@ -86,8 +82,8 @@ contract RelativeSpotIndexCalculator is IndexCalculator {
 
 		for (uint256 i = 0; i < indexData.strikes.length; i++) {
 			(, int256 price, , , ) = oracleData.oracles[i].latestRoundData();
-			int256 relativePrice = ((price * SPOT_MULTIPLIER) / indexData.strikes[i]) - SPOT_MULTIPLIER;
-			relativePrice = (relativePrice * int256(indexData.weights[i])) / WEIGHT_MULTIPLIER;
+			int256 relativePrice = ((price * IndexCalculator.SPOT_MULTIPLIER) / indexData.strikes[i]) - IndexCalculator.SPOT_MULTIPLIER;
+			relativePrice = (relativePrice * int256(indexData.weights[i])) / IndexCalculator.WEIGHT_MULTIPLIER;
 			if (style == CalculationStyle.average) {
 				relativeSpot += relativePrice;
 			} else if (style == CalculationStyle.min && relativePrice < relativeSpot) {
