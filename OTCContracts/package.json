@@ -17,6 +17,6 @@
     "@openzeppelin/contracts": "^4.8.1",
     "tento-dtd": "^1.0.5",
     "tento-index": "^1.0.3",
-    "tento-otccontractbase": "^1.0.1"
+    "tento-otccontractbase": "^1.0.2"
   }
 }

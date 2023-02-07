@@ -68,6 +68,8 @@ contract NonDeliverableSwap is OTCContractBase, ReentrancyGuard {
 		data.state = ContractState.active;
 		data.baseData.contractLockTime = uint64(block.timestamp);
 
+		//indexTracker.fixIndex(data.baseData.indexId, data.baseData.);
+
 		emit NonDeliverableSwapLocked(contractId);
 	}
 

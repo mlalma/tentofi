@@ -64,6 +64,7 @@ describe("NDS", function () {
         base = {
             dtdContractId: 0,
             indexId: 1,
+            fixParameters: [],
             collateralCalculator: flatCollateralCalc.address,
             collateralCalculatorParams: [0, 10000],
             offerEndTime: offerEndTime,
