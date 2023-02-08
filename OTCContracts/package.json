@@ -16,7 +16,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.1",
     "tento-dtd": "^1.0.5",
-    "tento-index": "^1.0.3",
+    "tento-index": "^1.0.4",
     "tento-otccontractbase": "^1.0.2"
   }
 }

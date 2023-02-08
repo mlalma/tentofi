@@ -58,6 +58,10 @@ describe("NDS", function () {
 
         await index.createOracleStorage([mockOracle.address], relativeSpot.address, fixStyle.address);
 
+        const oracleStg1 = await index.calculateOracleIndex([mockOracle.address], relativeSpot.address, fixStyle.address);
+
+        await index.createSpotIndex(oracleStg1, [10000], [0], ndsContract.address);
+
         offerEndTime = await time.latest() + 60 * 60;
         contractEndTime = await time.latest() + 10 * 60 * 60;
 
