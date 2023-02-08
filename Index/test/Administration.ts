@@ -59,14 +59,17 @@ describe("Administration", function () {
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
             const oracleStorage2 = await index.getOracleStorage(oracleStg2);
 
-            await index.createSpotIndex(oracleStg1, weights, []);
-            await index.createSpotIndex(oracleStg2, weights, [0]);
+            await index.createSpotIndex(oracleStg1, weights, [], alice.address);
+            await index.createSpotIndex(oracleStg2, weights, [0], bob.address);
 
             const indexStorage1 = await index.getIndexStorage(1);
             const indexStorage2 = await index.getIndexStorage(2);
 
             await expect(absoluteSpotCalculator.calculateIndex(oracleStorage1, indexStorage1, 1)).to.be.revertedWith("No access rights");
             await expect(relativeSpotCalculator.calculateIndex(oracleStorage2, indexStorage2, 2)).to.be.revertedWith("No access rights");
+
+            await expect(index.connect(bob).calculateIndex(1, false)).to.be.reverted;
+            await expect(index.calculateIndex(2, false)).to.be.reverted;
         });
     });
 
@@ -76,7 +79,7 @@ describe("Administration", function () {
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
 
-            await index.createSpotIndex(oracleStg1, weights, []);
+            await index.createSpotIndex(oracleStg1, weights, [], alice.address);
 
             const a = Array(ORACLE_COUNT).fill([1 * VALUE_MULTIPLIER]).flat();
 

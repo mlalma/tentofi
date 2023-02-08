@@ -72,14 +72,14 @@ describe("Index", function () {
         it("Should create a spot index", async function () {
             await index.createOracleStorage(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createSpotIndex(oracleStg1, weights, [])).to.emit(index, "SpotIndexCreated").withArgs(1);
+            await expect(index.createSpotIndex(oracleStg1, weights, [], alice.address)).to.emit(index, "SpotIndexCreated").withArgs(1);
 
             const indexData = await index.getIndexStorage(1);
             expect(indexData.oracleIndex).to.eq(oracleStg1);
             expect(indexData.weights.length).to.eq(weights.length);
             expect(indexData.markCount).to.eq(2 ** 32 - 1);
             expect(indexData.minDeltaBetweenMarkings).to.eq(0);
-            expect(indexData.owner).to.eq(alice.address);
+            expect(indexData.callingContract).to.eq(alice.address);
             expect(indexData.markingStartTimestamp).to.eq(0);
             expect(indexData.markingPrevTimestamp).to.eq(0);
             expect(indexData.currentIndexValue).to.eq(0);
@@ -88,7 +88,7 @@ describe("Index", function () {
         it("Should fix a spot index properly", async function () {
             await index.createOracleStorage(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createSpotIndex(oracleStg1, weights, [])).to.emit(index, "SpotIndexCreated").withArgs(1);
+            await expect(index.createSpotIndex(oracleStg1, weights, [], alice.address)).to.emit(index, "SpotIndexCreated").withArgs(1);
             await expect(index.fixIndex(1, Array(ORACLE_COUNT).fill(0).flat())).to.emit(index, "IndexFixed").withArgs(1);
 
             const indexData = await index.getIndexStorage(1);
@@ -98,7 +98,7 @@ describe("Index", function () {
             expect(indexData.weights.length).to.eq(weights.length);
             expect(indexData.markCount).to.eq(2 ** 32 - 1);
             expect(indexData.minDeltaBetweenMarkings).to.eq(0);
-            expect(indexData.owner).to.eq(alice.address);
+            expect(indexData.callingContract).to.eq(alice.address);
             expect(indexData.markingStartTimestamp).to.eq(curTime);
             expect(indexData.markingPrevTimestamp).to.eq(curTime);
             expect(indexData.currentIndexValue).to.eq(DEF_VALUE * SPOT_MULTIPLIER / VALUE_MULTIPLIER);
@@ -111,7 +111,7 @@ describe("Index", function () {
 
             await index.createOracleStorage([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [])).to.emit(index, "SpotIndexCreated").withArgs(1);
+            await expect(index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [], alice.address)).to.emit(index, "SpotIndexCreated").withArgs(1);
 
             await expect(index.calculateIndex(1, false)).to.be.reverted;
 
@@ -132,14 +132,14 @@ describe("Index", function () {
         it("Should create an index", async function () {
             await index.createOracleStorage(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createIndex(57, 3600, oracleStg1, weights, [])).to.emit(index, "IndexCreated").withArgs(1);
+            await expect(index.createIndex(57, 3600, oracleStg1, weights, [], alice.address)).to.emit(index, "IndexCreated").withArgs(1);
 
             const indexData = await index.getIndexStorage(1);
             expect(indexData.oracleIndex).to.eq(oracleStg1);
             expect(indexData.weights.length).to.eq(weights.length);
             expect(indexData.markCount).to.eq(57);
             expect(indexData.minDeltaBetweenMarkings).to.eq(3600);
-            expect(indexData.owner).to.eq(alice.address);
+            expect(indexData.callingContract).to.eq(alice.address);
             expect(indexData.markingStartTimestamp).to.eq(0);
             expect(indexData.markingPrevTimestamp).to.eq(0);
             expect(indexData.currentIndexValue).to.eq(0);
@@ -148,7 +148,7 @@ describe("Index", function () {
         it("Should fix an index properly", async function () {
             await index.createOracleStorage(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex(oracleAddresses, absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createIndex(57, 3600, oracleStg1, weights, [])).to.emit(index, "IndexCreated").withArgs(1);
+            await expect(index.createIndex(57, 3600, oracleStg1, weights, [], alice.address)).to.emit(index, "IndexCreated").withArgs(1);
             await expect(index.fixIndex(1, Array(ORACLE_COUNT).fill(0).flat())).to.emit(index, "IndexFixed").withArgs(1);
 
             const indexData = await index.getIndexStorage(1);
@@ -158,7 +158,7 @@ describe("Index", function () {
             expect(indexData.weights.length).to.eq(weights.length);
             expect(indexData.markCount).to.eq(57);
             expect(indexData.minDeltaBetweenMarkings).to.eq(3600);
-            expect(indexData.owner).to.eq(alice.address);
+            expect(indexData.callingContract).to.eq(alice.address);
             expect(indexData.markingStartTimestamp).to.eq(curTime);
             expect(indexData.markingPrevTimestamp).to.eq(curTime);
             expect(indexData.currentIndexValue).to.eq(DEF_VALUE * SPOT_MULTIPLIER / VALUE_MULTIPLIER);
@@ -171,7 +171,7 @@ describe("Index", function () {
 
             await index.createOracleStorage([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
-            await expect(index.createIndex(vals.length, 3600, oracleStg1, [WEIGHT_MULTIPLIER], [])).to.emit(index, "IndexCreated").withArgs(1);
+            await expect(index.createIndex(vals.length, 3600, oracleStg1, [WEIGHT_MULTIPLIER], [], alice.address)).to.emit(index, "IndexCreated").withArgs(1);
 
             await expect(index.calculateIndex(1, false)).to.be.reverted;
 
