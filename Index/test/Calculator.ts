@@ -17,9 +17,14 @@ describe("Calculators", function () {
     let oracles: Array<MockOracle>;
     let oracleAddresses: Array<string>;
 
+    let alice: SignerWithAddress;
+    let bob: SignerWithAddress;
+    let charles: SignerWithAddress;
+
     let weights: Array<number>;
 
     beforeEach(async function () {
+        [alice, bob, charles] = await ethers.getSigners();
         index = await createIndexContract();
         absoluteSpotCalculator = await createAbsoluteSpotIndexCalculator(index.address);
         relativeSpotCalculator = await createRelativeSpotIndexCalculator(index.address);
@@ -52,7 +57,7 @@ describe("Calculators", function () {
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], absoluteSpotCalculator.address, noFix.address);
 
             // Create spot index
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], []);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [], alice.address);
 
             // Fix the index to be able to start calculating the index value properly
             await index.fixIndex(1, [0])
@@ -80,7 +85,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1]], absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], absoluteSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 2], []);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 2], [], alice.address);
             await index.fixIndex(1, [0, 0])
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
@@ -109,7 +114,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], absoluteSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], absoluteSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], []);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], [], alice.address);
             await index.fixIndex(1, [10 * VALUE_MULTIPLIER, -2 * VALUE_MULTIPLIER, 3 * VALUE_MULTIPLIER]);
 
             const oracleStorage1 = await index.getOracleStorage(oracleStg1);
@@ -141,7 +146,7 @@ describe("Calculators", function () {
             await index.createOracleStorage([oracleAddresses[0]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0]], relativeSpotCalculator.address, noFix.address);
 
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [0]);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER], [0], alice.address);
 
             const FIX = 2 * VALUE_MULTIPLIER;
             await index.fixIndex(1, [FIX]);
@@ -168,7 +173,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 2], [0]);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 2], [0], alice.address);
 
             const fixes = [2 * 10 ** 6, 4 * 10 ** 6];
             await index.fixIndex(1, fixes);
@@ -202,7 +207,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1], oracleAddresses[2]], relativeSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], [0]);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER / 2, WEIGHT_MULTIPLIER / 4, WEIGHT_MULTIPLIER / 4], [0], alice.address);
             const fixes = [10 * VALUE_MULTIPLIER, -2 * VALUE_MULTIPLIER, 3 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);
 
@@ -235,7 +240,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [1]);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [1], alice.address);
 
             const fixes = [2 * VALUE_MULTIPLIER, 4 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);
@@ -266,7 +271,7 @@ describe("Calculators", function () {
 
             await index.createOracleStorage([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
             const oracleStg1 = await index.calculateOracleIndex([oracleAddresses[0], oracleAddresses[1]], relativeSpotCalculator.address, noFix.address);
-            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [2]);
+            await index.createSpotIndex(oracleStg1, [WEIGHT_MULTIPLIER, WEIGHT_MULTIPLIER], [2], alice.address);
 
             const fixes = [2 * VALUE_MULTIPLIER, 4 * VALUE_MULTIPLIER];
             await index.fixIndex(1, fixes);

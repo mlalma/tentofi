@@ -9,7 +9,7 @@ interface IDTDEngineContract {
 	//
 	// int256	-	PnL. If < 0 then short party is in profit, otherwise long is in profit
 	// bool		-	False if contract settlement should not happen, True if contract has run out
-	function markToMarket(uint256 contractId) external view returns (int256, bool);
+	function markToMarket(uint256 contractId) external returns (int256, bool);
 
 	// Function to notify the contract logic that a party has defaulted and the contract logic
 	// should perform clean up as the contract is now void

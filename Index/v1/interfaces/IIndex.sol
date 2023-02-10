@@ -19,7 +19,7 @@ interface IIndex {
 		uint64 minDeltaBetweenMarkings;
 		bytes32 oracleIndex;
 		int256 currentIndexValue;
-		address owner;
+		address callingContract;
 		int256[] strikes;
 		int16[] weights;
 	}

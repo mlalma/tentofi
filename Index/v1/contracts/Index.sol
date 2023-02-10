@@ -72,7 +72,8 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	function createSpotIndex(
 		bytes32 oracleIndex,
 		int16[] calldata weights,
-		int256[] calldata calculatorParams
+		int256[] calldata calculatorParams,
+		address callingContract
 	) public nonReentrant returns (uint256) {
 		require(oracleStorage[oracleIndex].oracles.length == weights.length);
 
@@ -81,7 +82,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		index.weights = weights;
 		index.markCount = type(uint32).max;
 		index.minDeltaBetweenMarkings = 0;
-		index.owner = msg.sender;
+		index.callingContract = callingContract;
 		indices[indexCounter] = index;
 
 		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
@@ -94,12 +95,14 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	// Creates a general index. markCount is the maximum number of times index calculation can be performed during the lifetime of the contract
 	// minDeltaBetweenMarkings is in seconds and defines what is the minimum delta between two calculations (in seconds).
 	// For weights, 100% ("full") participation is value 10000 and e.g. 50% weight would be 5000.
+	// "callingContract" is the instrument that is expected (and the only one that can) to call the fixIndex() and calculateIndex()
 	function createIndex(
 		uint32 markCount,
 		uint64 minDeltaBetweenMarkings,
 		bytes32 oracleIndex,
 		int16[] calldata weights,
-		int256[] calldata calculatorParams
+		int256[] calldata calculatorParams,
+		address callingContract
 	) public nonReentrant returns (uint256) {
 		require(oracleStorage[oracleIndex].oracles.length == weights.length);
 
@@ -108,7 +111,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 		index.weights = weights;
 		index.markCount = markCount;
 		index.minDeltaBetweenMarkings = minDeltaBetweenMarkings;
-		index.owner = msg.sender;
+		index.callingContract = callingContract;
 		indices[indexCounter] = index;
 
 		oracleStorage[oracleIndex].calculator.prepareNewIndex(weights.length, indexCounter, calculatorParams);
@@ -122,7 +125,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	function fixIndex(uint256 indexId, int256[] calldata fixStyleParams) public nonReentrant {
 		IndexStorage storage index = indices[indexId];
 
-		require(msg.sender == index.owner);
+		require(msg.sender == index.callingContract);
 		require(index.markingStartTimestamp == 0);
 		require(index.markCount > 0);
 		require(index.oracleIndex != bytes32(0));
@@ -147,7 +150,7 @@ contract IndexTracker is IIndex, ReentrancyGuard {
 	function calculateIndex(uint256 indexId, bool forceCalculation) public nonReentrant returns (int256 indexValue) {
 		IndexStorage storage index = indices[indexId];
 
-		require(msg.sender == index.owner);
+		require(msg.sender == index.callingContract);
 		require(index.markingStartTimestamp > 0);
 		require(
 			forceCalculation ||
