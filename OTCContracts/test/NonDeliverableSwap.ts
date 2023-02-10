@@ -9,6 +9,7 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 describe("NDS", function () {
     const VALUE_MULTIPLIER = 10 ** 6;
     const START_BALANCE = 1_000_000 * VALUE_MULTIPLIER;
+    const NOTIONAL_AMOUNT = 1_000 * VALUE_MULTIPLIER;
 
     let dtdEngine: DTDEngine;
     let ndsContract: NonDeliverableSwap;
@@ -82,7 +83,7 @@ describe("NDS", function () {
             notionalAmount: 1000 * VALUE_MULTIPLIER
         }
 
-        oracleVals = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5];
+        oracleVals = [100, -100, 200, -200, 300, -300, 400, -400, 500, -500];
         oracleVals = oracleVals.map((value, _index, _array) => { return value * VALUE_MULTIPLIER; });
 
         await mockOracle.setVals(oracleVals);
@@ -96,7 +97,7 @@ describe("NDS", function () {
             const contractData = await ndsContract.getNDSData(1);
 
             expect(contractData.state).to.equal(0);
-            expect(contractData.notionalAmount).to.equal(1000 * VALUE_MULTIPLIER);
+            expect(contractData.notionalAmount).to.equal(NOTIONAL_AMOUNT);
             expect(contractData.baseData.dtdContractId).to.equal(1);
         });
 
@@ -138,20 +139,22 @@ describe("NDS", function () {
         });
 
         it("Should mark-to-market the contract successfully", async function () {
-            /*await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.emit(ndsContract, "NonDeliverableSwapCreated").withArgs(1);
-            await expect(ndsContract.connect(bob).lockContract(2, 2)).to.be.rejected;
+            await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.emit(ndsContract, "NonDeliverableSwapCreated").withArgs(1);
+            await expect(ndsContract.connect(bob).lockContract(1, 2)).to.emit(ndsContract, "NonDeliverableSwapLocked").withArgs(1);
 
             for (let i = 0; i < oracleVals.length; i++) {
                 await dtdEngine.markToMarket(1);
                 const v1 = await dtdEngine.getVault(1);
                 const v2 = await dtdEngine.getVault(2);
                 expect(v1.depositBalance).to.be.equal(START_BALANCE);
-                expect(v1.minMarginLevel).to.be.equal(Math.max(0, 100 * VALUE_MULTIPLIER - oracleVals[i]));
+
+                const CHANGE = Math.round(((oracleVals[i] / oracleVals[0]) - 1.0) * NOTIONAL_AMOUNT);
+                expect(v1.minMarginLevel).to.be.equal(100 * VALUE_MULTIPLIER + Math.max(0, CHANGE));
                 expect(v2.depositBalance).to.be.equal(START_BALANCE);
-                expect(v2.minMarginLevel).to.be.equal(Math.max(0, 200 * VALUE_MULTIPLIER + oracleVals[i]));
+                expect(v2.minMarginLevel).to.be.equal(200 * VALUE_MULTIPLIER + Math.max(0, -CHANGE));
                 await time.increase(10);
                 await mockOracle.increasePos();
-            }*/
+            }
         });
 
         it("Should fail to mark-to-market the contract", async function () {
