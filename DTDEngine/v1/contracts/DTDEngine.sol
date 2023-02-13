@@ -182,6 +182,21 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		}
 	}
 
+	// Transfers value between vaults
+	// The originator of the call must be from same address than the vault where value is taken from
+	function transferBetweenVaults(
+		uint256 vaultTo,
+		uint256 vaultFrom,
+		uint256 valueToTransfer
+	) public whenNotPaused onlyRole(CONTRACT_ROLE) {
+		require(tx.origin == dtdVaults[vaultFrom].owner);
+		require(dtdVaults[vaultFrom].tokenAddr == dtdVaults[vaultTo].tokenAddr);
+		require(dtdVaults[vaultFrom].depositBalance - dtdVaults[vaultFrom].minMarginLevel >= valueToTransfer);
+
+		dtdVaults[vaultTo].depositBalance += valueToTransfer;
+		dtdVaults[vaultFrom].depositBalance -= valueToTransfer;
+	}
+
 	// Changes minimum margin level
 	function _changeMinMargin(uint256 sourceVault, int256 delta)
 		internal
@@ -231,7 +246,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 longVault = dtdContracts[contractId].longCounterpartyVault;
 		IDTDEngineContract contractLogic = dtdContracts[contractId].contractLogic;
 
-		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);	
+		require(tx.origin == dtdVaults[shortVault].owner || tx.origin == dtdVaults[longVault].owner);
 		(int256 pAndL, bool settled) = contractLogic.markToMarket(dtdContracts[contractId].contractId);
 
 		if (longVault == 0) {

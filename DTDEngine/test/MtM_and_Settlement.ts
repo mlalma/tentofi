@@ -24,7 +24,9 @@ describe("MarkToMarket", function () {
         [alice, bob, charles] = await ethers.getSigners();
 
         await mockToken.connect(alice).faucet(START_TOKENS);
+        await mockToken2.connect(alice).faucet(START_TOKENS);
         await mockToken.connect(bob).faucet(START_TOKENS);
+        await mockToken.connect(charles).faucet(START_TOKENS);
 
         const contractRole = await dtdEngine.CONTRACT_ROLE();
         await dtdEngine.grantRole(contractRole, bob.address);
@@ -41,6 +43,14 @@ describe("MarkToMarket", function () {
         await dtdEngine.connect(bob).changeDepositBalance(2, START_TOKENS);
 
         await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.emit(dtdEngine, "ContractLocked").withArgs(1, 1, 2);
+
+        await expect(dtdEngine.createVault(mockToken2.address)).to.emit(dtdEngine, "VaultCreated").withArgs(3, alice.address, mockToken2.address);
+        await mockToken2.connect(alice).approve(dtdEngine.address, START_TOKENS);
+        await dtdEngine.changeDepositBalance(3, START_TOKENS);
+
+        await expect(dtdEngine.connect(charles).createVault(mockToken.address)).to.emit(dtdEngine, "VaultCreated").withArgs(4, charles.address, mockToken.address);
+        await mockToken.connect(charles).approve(dtdEngine.address, START_TOKENS);
+        await dtdEngine.connect(charles).changeDepositBalance(4, START_TOKENS);
     });
 
     it("Should correctly settle a contract with linear win for long party", async function () {
@@ -161,5 +171,22 @@ describe("MarkToMarket", function () {
         aliceVault = await dtdEngine.getVault(1);
         expect(aliceVault.depositBalance).to.equal(START_TOKENS);
         expect(aliceVault.minMarginLevel).to.equal(PENALTY_MARGIN);
+    });
+
+    describe("Transfer", function () {
+        it("Should transfer correct amount of balance to other vault", async function () {
+            await dtdEngine.connect(alice).transferBetweenVaults(2, 1, 1_000);
+            const v1 = await dtdEngine.getVault(1);
+            const v2 = await dtdEngine.getVault(2);
+
+            expect(v1.depositBalance).to.eq(START_TOKENS - 1_000);
+            expect(v2.depositBalance).to.eq(START_TOKENS + 1_000);
+        });
+
+        it("Should not transfer balance to other vault", async function () {
+            await expect(dtdEngine.connect(bob).transferBetweenVaults(2, 1, 1_000)).to.be.reverted;
+            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 1, START_TOKENS - PENALTY_MARGIN + 1)).to.be.reverted;
+            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 3, 1_000)).to.be.reverted;
+        });
     });
 });
