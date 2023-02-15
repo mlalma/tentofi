@@ -6,7 +6,7 @@ This project contains utility and base contracts for helping the development of 
 
 Base class from where the OTC instruments can be derived. It contains basic data structure of common elements that all OTC contracts need. It is also deriving from ```IDTDEngineContract```, which ties the derived contracts to using DTD for clearing and settlement.
 
-## Collateral Calculators
+## Collateral Calculators
 
 When contract is active and it is marked to market, DTD Engine reserves collateral from the losing party's vault to ensure that they will be able to honor the agreement. The amount of collateral that should be reserved depends on multitude of factors such as how volatile the underlying index is, how long the contract still will be in running and how liquid the counterparties are.
 
