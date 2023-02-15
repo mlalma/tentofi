@@ -80,6 +80,11 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		}
 	}
 
+	// Returns a contract
+	function getContract(uint256 contractId) public view returns (Contract memory) {
+		return dtdContracts[contractId];
+	}
+
 	// Returns vault
 	function getVault(uint256 vaultId) public view returns (Vault memory) {
 		return dtdVaults[vaultId];
