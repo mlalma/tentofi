@@ -8,4 +8,4 @@ Contract for implementing a standard Non-Deliverable Swap instrument (NDS). This
 
 ## Non-Deliverable Option
 
-Non-Deliverable Option (NDO) works like a vanilla option, but it is cash-settled at maturity...(Note: Rest to be written after implementation completed)
+Non-Deliverable Option (NDO) works like a standard option, but it is cash-settled at maturity. Seller (short) takes risk as a considerable price move can cause significant loss. Currently supported are European put and call options. The option strike and valuation can be based on the absolute value of a single asset (vanilla option), average value of an asset during the lifetime of the option (Asian option) or best-of / worst-of / average value of basket of assets (basket option).
