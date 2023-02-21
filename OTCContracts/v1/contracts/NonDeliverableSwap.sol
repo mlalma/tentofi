@@ -77,6 +77,7 @@ contract NonDeliverableSwap is OTCContractBase, ReentrancyGuard {
 	function markToMarket(uint256 contractId) public returns (int256, bool) {
 		require(address(dtdEngine) == msg.sender);
 		require(NDSLedger[contractId].notionalAmount > 0);
+		require(NDSLedger[contractId].state == ContractState.active);
 
 		NDSData storage swapData = NDSLedger[contractId];
 
@@ -111,6 +112,7 @@ contract NonDeliverableSwap is OTCContractBase, ReentrancyGuard {
 		uint256 contractId,
 		address /*defaultedParty*/
 	) public {
+		require(address(dtdEngine) == msg.sender);
 		NDSLedger[contractId].state = ContractState.terminated;
 	}
 }

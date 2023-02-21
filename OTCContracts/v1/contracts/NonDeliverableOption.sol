@@ -11,8 +11,10 @@ import "hardhat/console.sol";
 
 contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 	enum OptionType {
-		Call,
-		Put
+		euroCall,
+		euroPut,
+		euroDigitalCall,
+		euroDigitalPut
 	}
 
 	struct NDOData {
@@ -23,6 +25,7 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 		// 0th index is option premium
 		// 1st index is strike
 		// 2nd.. index are for passing parameters for (exotic) options
+		// For European Digital Call / Put 2nd index is the payout when index is in-the-money
 		int256[] optionParams;
 		bool active;
 	}
@@ -48,6 +51,10 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 		require(optionData.baseData.offerEndTime < optionData.baseData.contractEndTime);
 		require(optionData.notionalAmount > 0);
 		require(optionData.optionParams[0] >= 0);
+
+		if (optionData.optionType == OptionType.euroDigitalCall || optionData.optionType == OptionType.euroDigitalPut) {
+			require(optionData.optionParams[2] > 0);
+		}
 
 		uint256 dtdContractId = dtdEngine.createContract(
 			this,
@@ -96,6 +103,7 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 	function markToMarket(uint256 contractId) public returns (int256, bool) {
 		require(address(dtdEngine) == msg.sender);
 		require(NDOLedger[contractId].notionalAmount > 0);
+		require(NDOLedger[contractId].state == ContractState.active);
 
 		NDOData storage optionData = NDOLedger[contractId];
 
@@ -107,12 +115,16 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 
 		int256 currentVal = indexTracker.calculateIndex(optionData.baseData.indexId, contractEnded);
 
-		if (optionData.optionType == OptionType.Call) {
+		if (optionData.optionType == OptionType.euroCall) {
 			currentVal = currentVal - optionData.optionParams[1];
 			currentVal = currentVal < 0 ? int256(0) : currentVal;
-		} else if (optionData.optionType == OptionType.Put) {
+		} else if (optionData.optionType == OptionType.euroPut) {
 			currentVal = optionData.optionParams[1] - currentVal;
 			currentVal = currentVal < 0 ? int256(0) : currentVal;
+		} else if (optionData.optionType == OptionType.euroDigitalCall) {
+			currentVal = currentVal >= optionData.optionParams[1] ? optionData.optionParams[2] : int256(0);
+		} else if (optionData.optionType == OptionType.euroDigitalPut) {
+			currentVal = currentVal <= optionData.optionParams[1] ? optionData.optionParams[2] : int256(0);
 		} else {
 			revert();
 		}
@@ -145,6 +157,7 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 		uint256 contractId,
 		address /*defaultedParty*/
 	) public {
+		require(address(dtdEngine) == msg.sender);
 		NDOLedger[contractId].state = ContractState.terminated;
 	}
 }

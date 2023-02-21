@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { DTDEngine, MockToken, IndexTracker, RelativeSpotIndexCalculator, NoFix, FlatCollateralCalculator, NonDeliverableSwap, NonDeliverableOption, MockOracle, SpotFix, AbsoluteSpotIndexCalculator } from "../typechain-types";
+import { DTDEngine, MockToken, IndexTracker, RelativeSpotIndexCalculator, NoFix, FlatCollateralCalculator, NonDeliverableSwap, NonDeliverableOption, MockOracle, SpotFix, AbsoluteSpotIndexCalculator, NonDeliverableAccuDecu } from "../typechain-types";
 
 export async function createDTDEngine(): Promise<DTDEngine> {
     const DTDEngineFactory = await ethers.getContractFactory("DTDEngine");
@@ -67,4 +67,10 @@ export async function createNDOContract(indexContractAddress: string, dtdContrac
     const ndo = await (await ethers.getContractFactory("NonDeliverableOption")).deploy(indexContractAddress, dtdContractAddress) as NonDeliverableOption;
     await ndo.deployed();
     return ndo;
+}
+
+export async function createNDACDEContract(indexContractAddress: string, dtdContractAddress: string): Promise<NonDeliverableAccuDecu> {
+    const ndacde = await (await ethers.getContractFactory("NonDeliverableAccuDecu")).deploy(indexContractAddress, dtdContractAddress) as NonDeliverableAccuDecu;
+    await ndacde.deployed();
+    return ndacde;
 }
