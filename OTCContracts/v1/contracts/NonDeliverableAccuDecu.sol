@@ -33,17 +33,21 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 		BaseContractData baseData;
 		ContractState state;
 		uint256 notionalAmount;
-		AccuDeccuType AccuDeccuType;
+		AccuDeccuType accuDeccuType;
 		int256 strike;
 		int256 knockOutBarrier;
 		// Leverage factor is downside leverage factor for buyer (accu) or seller (decu). 10000 is 1.0
-		uint256 leverageFactor;
+		int256 leverageFactor;
 		uint256 guaranteedFixings;
+		// Need to track the consolidated P/L because each forwards is settled individually.
+		// Also no collateral management is done since settlment happens on each MtM call.
+		int256 consolidatedPL;
 	}
 	mapping(uint256 => NDACDEData) public NDACDELedger;
 	uint256 public NDACDELedgerCounter = 1;
 
-	event NonDeliverableAccuDecuCreated(uint256 ndacdecID);
+	event NonDeliverableAccuDecuCreated(uint256 ndAccDecID);
+	event NonDeliverableAccuDecuLocked(uint256 ndAccDecID);
 
 	constructor(address indexTrackerAddr, address dtdEngineAddr) OTCContractBase(indexTrackerAddr, dtdEngineAddr) {}
 
@@ -55,6 +59,7 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 	) public returns (uint256) {
 		require(acdeData.baseData.offerEndTime > block.timestamp);
 		require(acdeData.baseData.offerEndTime < acdeData.baseData.contractEndTime);
+		require(acdeData.leverageFactor > 0);
 		require(acdeData.notionalAmount > 0);
 
 		uint256 dtdContractId = dtdEngine.createContract(
@@ -67,6 +72,7 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 
 		acdeData.baseData.dtdContractId = dtdContractId;
 		acdeData.state = ContractState.open;
+		acdeData.consolidatedPL = 0;
 
 		(address vaultOwner, ) = dtdEngine.getVaultOwners(dtdContractId);
 		require(vaultOwner == tx.origin);
@@ -79,14 +85,81 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 		return NDACDELedgerCounter - 1;
 	}
 
+	// Locks contract when counterparty calls to take the other side
+	function lockContract(uint256 contractId, uint256 longPartyVaultId) public {
+		NDACDEData storage data = NDACDELedger[contractId];
+		require(data.notionalAmount > 0);
+		require(data.state == ContractState.open);
+
+		dtdEngine.lockContract(contractId, longPartyVaultId);
+		data.state = ContractState.active;
+		data.baseData.contractLockTime = uint64(block.timestamp);
+
+		indexTracker.fixIndex(data.baseData.indexId, data.baseData.fixParameters);
+
+		emit NonDeliverableAccuDecuLocked(contractId);
+	}
+
 	function markToMarket(uint256 contractId) public returns (int256, bool) {
 		require(address(dtdEngine) == msg.sender);
-		return (0, false);
+		require(NDACDELedger[contractId].notionalAmount > 0);
+		require(NDACDELedger[contractId].state == ContractState.active);
+
+		NDACDEData storage data = NDACDELedger[contractId];
+
+		bool contractEnded = block.timestamp >= data.baseData.contractEndTime;
+		int256 currentVal = indexTracker.calculateIndex(data.baseData.indexId, contractEnded);
+
+		// Check for the knock-out and if done return the current consolidated P&L and close the contract
+		// Note that when barrier is breached
+		if (data.accuDeccuType == AccuDeccuType.Accumulator) {
+			if (currentVal >= data.knockOutBarrier && data.guaranteedFixings == 0) {
+				data.state = ContractState.settled;
+				return (data.consolidatedPL, true);
+			}
+		} else if (data.accuDeccuType == AccuDeccuType.Decumulator) {
+			if (currentVal <= data.knockOutBarrier && data.guaranteedFixings == 0) {
+				data.state = ContractState.settled;
+				return (data.consolidatedPL, true);
+			}
+		}
+
+		if (data.guaranteedFixings > 0) {
+			data.guaranteedFixings -= 1;
+		}
+
+		if (data.accuDeccuType == AccuDeccuType.Accumulator) {
+			currentVal = currentVal - data.strike;
+			// Current index value is below strike, we need to multiply by leverage factor
+			// Short party is in profit for more
+			if (currentVal < 0) {
+				currentVal = (currentVal * data.leverageFactor) / 10000;
+			}
+		} else if (data.accuDeccuType == AccuDeccuType.Decumulator) {
+			currentVal = data.strike - currentVal;
+			// Note that on decumulator we need to check if > 0 so that long party will be in profit for more
+			if (currentVal > 0) {
+				currentVal = (currentVal * data.leverageFactor) / 10000;
+			}
+		}
+
+		currentVal = (currentVal * int256(data.notionalAmount)) / IndexConstants.SPOT_MULTIPLIER;
+		data.consolidatedPL += currentVal;
+
+		if (contractEnded) {
+			data.state = ContractState.settled;
+		}
+
+		return (data.consolidatedPL, contractEnded);
 	}
 
 	// Function to notify the contract logic that a party has defaulted and the contract logic
 	// should perform clean up as the contract is now void
-	function partyHasDefaulted(uint256 contractId, address defaultedParty) public {
+	function partyHasDefaulted(
+		uint256 contractId,
+		address /*defaultedParty*/
+	) public {
 		require(address(dtdEngine) == msg.sender);
+		NDACDELedger[contractId].state = ContractState.terminated;
 	}
 }
