@@ -1,13 +1,13 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-ethers";
 
 require('dotenv').config();
 
 const { API_URL, PRIVATE_KEY } = process.env;
 
 module.exports = {
-  solidity: "0.8.17",
+  solidity: "0.8.27",
   paths: {
     sources: "./v1"
   },

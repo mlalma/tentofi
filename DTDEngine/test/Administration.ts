@@ -1,43 +1,48 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
 import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
 
 describe("Administration", function () {
   let dtdEngine: DTDEngine;
+  let dtdEngineAddress: string;
   let emptyMockContract: EmptyMockContract;
+  let emptyMockContractAddress: string;
   let emptyMockContract2: EmptyMockContract;
+  let emptyMockContract2Address: string;
+  let mockToken: MockToken;
+  let mockTokenAddress: string;
+
   let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
   let contractRole: string;
   let contractAdminRole: string;
-  let mockToken: MockToken;
 
   beforeEach(async function () {
-    dtdEngine = await createDTDEngine();
-    emptyMockContract = await createEmptyMockContract();
-    emptyMockContract2 = await createEmptyMockContract();
-    mockToken = await createMockToken();
+    [dtdEngine, dtdEngineAddress] = await createDTDEngine();
+    [emptyMockContract, emptyMockContractAddress] = await createEmptyMockContract();
+    [emptyMockContract2, emptyMockContract2Address] = await createEmptyMockContract();
+    [mockToken, mockTokenAddress] = await createMockToken();
     [alice, bob, charles] = await ethers.getSigners();
-    contractRole = await dtdEngine.CONTRACT_ROLE();
-    contractAdminRole = await dtdEngine.CONTRACT_ADMIN_ROLE();
+    contractRole = await dtdEngine.DTD_CONTRACT_ROLE();
+    contractAdminRole = await dtdEngine.DTD_CONTRACT_ADMIN_ROLE();
   });
 
   describe("Registration", function () {
     it("Should register a contract to DTD", async function () {
-      await dtdEngine.grantRole(contractRole, emptyMockContract.address);
-      expect(await dtdEngine.hasRole(contractRole, emptyMockContract.address)).to.eq(true);
-      expect(await dtdEngine.hasRole(contractRole, emptyMockContract2.address)).to.eq(false);
+      await dtdEngine.grantRole(contractRole, emptyMockContractAddress);
+      expect(await dtdEngine.hasRole(contractRole, emptyMockContractAddress)).to.eq(true);
+      expect(await dtdEngine.hasRole(contractRole, emptyMockContract2Address)).to.eq(false);
     });
 
     it("Should fail to register contract to DTD", async function () {
-      await expect(dtdEngine.connect(bob).grantRole(contractRole, emptyMockContract.address)).to.be.reverted;
+      await expect(dtdEngine.connect(bob).grantRole(contractRole, emptyMockContractAddress)).to.be.reverted;
     });
 
     it("Should add a new contract registror to DTD and then call it", async function () {
       await dtdEngine.grantRole(contractAdminRole, bob.address);
-      await dtdEngine.connect(bob).grantRole(contractRole, emptyMockContract.address);
-      expect(await dtdEngine.hasRole(contractRole, emptyMockContract.address)).to.eq(true);
+      await dtdEngine.connect(bob).grantRole(contractRole, emptyMockContractAddress);
+      expect(await dtdEngine.hasRole(contractRole, emptyMockContractAddress)).to.eq(true);
     });
   });
 
@@ -53,9 +58,9 @@ describe("Administration", function () {
     });
 
     it("Should not be able to call any methods of DTD when contract is paused", async function () {
-      await expect(dtdEngine.createVault(mockToken.address)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockToken.address);
+      await expect(dtdEngine.createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockTokenAddress);
       await dtdEngine.modifyPauseStatus(true);
-      await expect(dtdEngine.createVault(mockToken.address)).to.be.revertedWith("Pausable: paused");
+      await expect(dtdEngine.createVault(mockTokenAddress)).to.be.rejectedWith("EnforcedPause");
     });
   });
 });

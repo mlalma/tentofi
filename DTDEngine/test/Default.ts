@@ -1,16 +1,22 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
 import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
 
 describe("Defaulting", function () {
     let dtdEngine: DTDEngine;
+    let dtdEngineAddress: string;
     let emptyMockContract: EmptyMockContract;
+    let emptyMockContractAddress: string;
     let emptyMockContract2: EmptyMockContract;
-    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
+    let emptyMockContract2Address: string;
     let mockToken: MockToken;
+    let mockTokenAddress: string;
     let mockToken2: MockToken;
+    let mockToken2Address: string;
+
+    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
 
     const START_TOKENS = 1_000_0;
     const PENALTY_MARGIN = 1_000;
@@ -18,27 +24,28 @@ describe("Defaulting", function () {
     async function grantAndMoveTokens(party: SignerWithAddress, vaultId: number) {
         await mockToken.connect(party).faucet(START_TOKENS);
 
-        const contractRole = await dtdEngine.CONTRACT_ROLE();
+        const contractRole = await dtdEngine.DTD_CONTRACT_ROLE();
         await dtdEngine.grantRole(contractRole, party.address);
 
-        await dtdEngine.connect(party).createVault(mockToken.address);
-        await mockToken.connect(party).approve(dtdEngine.address, START_TOKENS);
+        await dtdEngine.connect(party).createVault(mockTokenAddress);
+        await mockToken.connect(party).approve(dtdEngineAddress, START_TOKENS);
         await dtdEngine.connect(party).changeDepositBalance(vaultId, START_TOKENS);
     }
 
     beforeEach(async function () {
-        dtdEngine = await createDTDEngine();
-        emptyMockContract = await createEmptyMockContract();
-        emptyMockContract2 = await createEmptyMockContract();
-        mockToken = await createMockToken();
-        mockToken2 = await createMockToken();
+        [dtdEngine, dtdEngineAddress] = await createDTDEngine();
+        [emptyMockContract, emptyMockContractAddress] = await createEmptyMockContract();
+        [emptyMockContract2, emptyMockContract2Address] = await createEmptyMockContract();
+        [mockToken, mockTokenAddress] = await createMockToken();
+        [mockToken2, mockToken2Address] = await createMockToken();
+
         [alice, bob, charles] = await ethers.getSigners();
 
         await grantAndMoveTokens(alice, 1);
         await grantAndMoveTokens(bob, 2);
         await grantAndMoveTokens(charles, 3);
 
-        await expect(dtdEngine.createContract(emptyMockContract.address, 2, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(1, emptyMockContract.address, alice.address);
+        await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(1, emptyMockContractAddress, alice.address);
         await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.emit(dtdEngine, "ContractLocked").withArgs(1, 1, 2);
     });
 
@@ -120,7 +127,7 @@ describe("Defaulting", function () {
         const payout = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 10000];
         const payout2 = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4000];
 
-        await expect(dtdEngine.createContract(emptyMockContract2.address, 4, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2.address, alice.address);
+        await expect(dtdEngine.createContract(emptyMockContract2Address, 4, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2Address, alice.address);
         await expect(dtdEngine.connect(charles).lockContract(2, 3)).to.emit(dtdEngine, "ContractLocked").withArgs(2, 1, 3);
 
         await emptyMockContract.setPayoff(payout);
@@ -252,7 +259,7 @@ describe("Defaulting", function () {
         const payout = [0, -500, -1000, -1500, -2000, -2500, -3000, -3500, -4000, -10000];
         const payout2 = [0, -500, -1000, -1500, -2000, -2500, -3000, -3500, -4000, -4000];
 
-        await expect(dtdEngine.createContract(emptyMockContract2.address, 4, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2.address, alice.address);
+        await expect(dtdEngine.createContract(emptyMockContract2Address, 4, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2Address, alice.address);
         await expect(dtdEngine.connect(charles).lockContract(2, 3)).to.emit(dtdEngine, "ContractLocked").withArgs(2, 1, 3);
 
         await emptyMockContract.setPayoff(payout);

@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IDTDEngineContract.sol";
 
-// Decentralized Token Depository (DTD) Engine for managing bilateral contracts
-// between counterparties.
+// Decentralized Token Depository (DTD) Engine for managing bilateral contracts between counterparties.
 contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
+	// DTD Administrator administers the whole contract and can influence on everything
 	bytes32 public constant DTD_ADMIN_ROLE = keccak256("DTD_ADMIN_ROLE");
-	bytes32 public constant CONTRACT_ADMIN_ROLE = keccak256("CONTRACT_ADMIN_ROLE");
-	bytes32 public constant CONTRACT_ROLE = keccak256("CONTRACT_ROLE");
+	// DTD Contract Administrator can define which OTC Contracts can interact with DTD Engine
+	bytes32 public constant DTD_CONTRACT_ADMIN_ROLE = keccak256("DTD_CONTRACT_ADMIN_ROLE");
+	// DTD Contracts are OTC (Smart) Contracts that interact with DTD Engine
+	bytes32 public constant DTD_CONTRACT_ROLE = keccak256("DTD_CONTRACT_ROLE");
 
 	// Single DTD Vault - Every participant needs to have one or more vaults.
 	//
@@ -52,6 +54,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	mapping(uint256 => Contract) public dtdContracts;
 	uint256 public dtdContractCounter = 1;
 
+	// Toggle for contract admin to shut down the contract in case something is really wrong
 	bool private emergencyValve = false;
 
 	// All the events sent by this contract
@@ -66,9 +69,9 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	constructor() ReentrancyGuard() AccessControl() Pausable() {
 		_grantRole(DEFAULT_ADMIN_ROLE, tx.origin);
 		_grantRole(DTD_ADMIN_ROLE, tx.origin);
-		_grantRole(CONTRACT_ADMIN_ROLE, tx.origin);
-		_grantRole(CONTRACT_ROLE, tx.origin);
-		_setRoleAdmin(CONTRACT_ROLE, CONTRACT_ADMIN_ROLE);
+		_grantRole(DTD_CONTRACT_ADMIN_ROLE, tx.origin);
+		_grantRole(DTD_CONTRACT_ROLE, tx.origin);
+		_setRoleAdmin(DTD_CONTRACT_ROLE, DTD_CONTRACT_ADMIN_ROLE);
 	}
 
 	// Admins can pause contract if something is going wrong
@@ -115,7 +118,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 shortPartyVaultId,
 		uint256 penaltyMarginShortParty,
 		uint256 penaltyMarginLongParty
-	) public whenNotPaused onlyRole(CONTRACT_ROLE) returns (uint256) {
+	) public whenNotPaused onlyRole(DTD_CONTRACT_ROLE) returns (uint256) {
 		require(tx.origin == dtdVaults[shortPartyVaultId].owner);
 		require(
 			dtdVaults[shortPartyVaultId].depositBalance >=
@@ -140,7 +143,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	}
 
 	// Locks the contract
-	function lockContract(uint256 contractId, uint256 longPartyVaultId) public whenNotPaused onlyRole(CONTRACT_ROLE) {
+	function lockContract(uint256 contractId, uint256 longPartyVaultId) public whenNotPaused onlyRole(DTD_CONTRACT_ROLE) {
 		require(address(dtdContracts[contractId].contractLogic) != address(0));
 		require(dtdContracts[contractId].shortCounterpartyVault != 0);
 		require(tx.origin == dtdVaults[longPartyVaultId].owner);
@@ -193,7 +196,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		uint256 vaultTo,
 		uint256 vaultFrom,
 		uint256 valueToTransfer
-	) public whenNotPaused onlyRole(CONTRACT_ROLE) {
+	) public whenNotPaused onlyRole(DTD_CONTRACT_ROLE) {
 		require(tx.origin == dtdVaults[vaultFrom].owner);
 		require(dtdVaults[vaultFrom].tokenAddr == dtdVaults[vaultTo].tokenAddr);
 		require(dtdVaults[vaultFrom].depositBalance - dtdVaults[vaultFrom].minMarginLevel >= valueToTransfer);
@@ -311,11 +314,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 				_transferBalance(longVault, shortVault, int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
 				_changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
 			} else {
-				_transferBalance(
-					shortVault,
-					longVault,
-					int256(dtdContracts[contractId].penaltyMarginShortCounterparty)
-				);
+				_transferBalance(shortVault, longVault, int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
 				_changeMinMargin(longVault, -int256(dtdContracts[contractId].penaltyMarginLongCounterparty));
 			}
 
@@ -352,13 +351,13 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 		return pAndL;
 	}
 
-	// Enable emergency valve
+	// Enable emergency valve, after this the contract is basically done and only thing left is to move money away
 	function enableEmergencyValve() public whenPaused onlyRole(DTD_ADMIN_ROLE) {
 		emergencyValve = true;
 	}
 
-	// This is for emergencies - when emergency valve has been enabled it provides chance for vault owners to
-	// withdraw their *full* balance. Only used for extreme situations, the contract cannot be productively used anymore
+	// This is for emergencies - when the emergency valve is activated, it allows vault owners to
+	// withdraw their *full* balance. Should only be used in extreme situations, the contract can no longer be used productively.
 	function emergencyVaultTransfer(uint256 vaultId) public whenPaused nonReentrant {
 		require(emergencyValve);
 		require(tx.origin == dtdVaults[vaultId].owner);
