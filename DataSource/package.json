@@ -1,0 +1,40 @@
+{
+  "name": "tento-datasource",
+  "description": "Data source contracts for abstracting the oracle data for the OTC derivatives",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "homepage": "https://github.com/mlalma/tentofi/blob/main/DataSource/README.md",
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "otc",
+    "oracle",
+    "data",
+    "chainlink"
+  ],
+  "author": "mla_lma",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlalma/tentofi"
+  },
+  "bugs": {
+    "url": "https://github.com/mlalma/tentofi/issues"
+  },
+  "files": [
+    "v1/contracts",
+    "v1/interfaces",
+    "artifacts/v1/contracts",
+    "artifacts/v1/interfaces"
+  ],
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.10"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
