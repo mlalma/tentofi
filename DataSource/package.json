@@ -1,6 +1,6 @@
 {
   "name": "tento-datasource",
-  "description": "Data source contracts for abstracting the oracle data for the OTC derivatives",
+  "description": "Data source contracts for the oracle data for the Tento OTC derivatives",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "dotenv": "^16.4.5",
-    "hardhat": "^2.22.10"
+    "hardhat": "^2.22.11"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2"
