@@ -22,7 +22,7 @@ module.exports = {
     hardhat: {
       allowUnlimitedContractSize: true
     },
-    polygon_mumbai: {
+    polygon_amoy: {
       url: API_URL,
       accounts: [`0x${PRIVATE_KEY}`]
     }
