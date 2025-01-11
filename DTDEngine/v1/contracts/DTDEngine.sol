@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IDTDEngineContract.sol";
 
 // Decentralized Token Depository (DTD) Engine for managing bilateral contracts between counterparties.
-contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
+contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 	// DTD Administrator administers the whole contract and can influence on everything
 	bytes32 public constant DTD_ADMIN_ROLE = keccak256("DTD_ADMIN_ROLE");
 	// DTD Contract Administrator can define which OTC Contracts can interact with DTD Engine
@@ -66,7 +66,7 @@ contract DTDEngine is AccessControl, ReentrancyGuard, Pausable {
 	event ContractMarginCall(uint256 contractId, address marginCalledParty);
 
 	// Constructor
-	constructor() ReentrancyGuard() AccessControl() Pausable() {
+	constructor() ReentrancyGuardTransient() AccessControl() Pausable() {
 		_grantRole(DEFAULT_ADMIN_ROLE, tx.origin);
 		_grantRole(DTD_ADMIN_ROLE, tx.origin);
 		_grantRole(DTD_CONTRACT_ADMIN_ROLE, tx.origin);

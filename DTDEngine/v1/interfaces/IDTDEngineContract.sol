@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
 // Interface that any contract logic wanting to use DTDEngine needs to implement
 interface IDTDEngineContract {

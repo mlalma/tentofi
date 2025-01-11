@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.8",
+  "version": "1.0.9",
   "homepage": "https://github.com/mlalma/tentofi/blob/main/DTDEngine/README.md",
   "keywords": [
     "solidity",
@@ -31,10 +31,10 @@
   ],
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "dotenv": "^16.4.5",
-    "hardhat": "^2.22.11"
+    "dotenv": "^16.4.7",
+    "hardhat": "^2.22.17"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2"
+    "@openzeppelin/contracts": "^5.2.0"
   }
 }
