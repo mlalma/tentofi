@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
-import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
+import { ethers, createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils.js";
+import type { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types/index.js";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers.js";
 
 describe("Creation", function () {
     let dtdEngine: DTDEngine;
@@ -16,7 +15,7 @@ describe("Creation", function () {
     let mockToken2: MockToken;
     let mockToken2Address: string;
 
-    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
+    let alice: HardhatEthersSigner, bob: HardhatEthersSigner, charles: HardhatEthersSigner;
 
     beforeEach(async function () {
         [dtdEngine, dtdEngineAddress] = await createDTDEngine();
@@ -49,10 +48,10 @@ describe("Creation", function () {
             await expect(dtdEngine.createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockTokenAddress);
 
             await mockToken.connect(bob).approve(dtdEngineAddress, 1_000_000);
-            await expect(dtdEngine.connect(bob).changeDepositBalance(1, 1_000_000)).to.be.reverted;
+            await expect(dtdEngine.connect(bob).changeDepositBalance(1, 1_000_000)).to.be.revert(ethers);
 
             await mockToken.approve(dtdEngineAddress, 999_999);
-            await expect(dtdEngine.changeDepositBalance(1, 1_000_000)).to.be.reverted;
+            await expect(dtdEngine.changeDepositBalance(1, 1_000_000)).to.be.revert(ethers);
         });
 
         it("Should create two vaults", async function () {
@@ -73,7 +72,7 @@ describe("Creation", function () {
             await dtdEngine.changeDepositBalance(1, -500_000);
             expect(await mockToken.balanceOf(alice.address)).to.equal(500_000);
 
-            await expect(dtdEngine.changeDepositBalance(1, -500_001)).to.be.reverted;
+            await expect(dtdEngine.changeDepositBalance(1, -500_001)).to.be.revert(ethers);
             await dtdEngine.changeDepositBalance(1, -500_000);
             expect(await mockToken.balanceOf(alice.address)).to.equal(1_000_000);
         });
@@ -92,14 +91,14 @@ describe("Creation", function () {
             await mockToken.connect(bob).approve(dtdEngineAddress, 1_000_000);
             await dtdEngine.connect(bob).changeDepositBalance(1, 1_000_000);
 
-            await expect(dtdEngine.connect(charles).createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.be.reverted;
+            await expect(dtdEngine.connect(charles).createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.be.revert(ethers);
 
-            await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.be.reverted;
+            await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.be.revert(ethers);
 
             await expect(dtdEngine.createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(2, alice.address, mockTokenAddress);
             await mockToken.approve(dtdEngineAddress, 999);
             await dtdEngine.changeDepositBalance(2, 999);
-            await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 2, 1000, 1)).to.be.reverted;
+            await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 2, 1000, 1)).to.be.revert(ethers);
         });
 
         it("Should create contract and lock it", async function () {
@@ -126,13 +125,39 @@ describe("Creation", function () {
 
             await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.emit(dtdEngine, "ContractCreated").withArgs(1, emptyMockContractAddress, alice.address);
 
-            await expect(dtdEngine.connect(bob).lockContract(2, 2)).to.be.reverted;
-            await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.be.reverted;
+            await expect(dtdEngine.connect(bob).lockContract(2, 2)).to.be.revert(ethers);
+            await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.be.revert(ethers);
 
             await mockToken2.connect(bob).approve(dtdEngineAddress, 1_000_000);
             await dtdEngine.connect(bob).changeDepositBalance(3, 1_000_000);
 
-            await expect(dtdEngine.connect(bob).lockContract(1, 3)).to.be.reverted;
+            await expect(dtdEngine.connect(bob).lockContract(1, 3)).to.be.revert(ethers);
+        });
+
+        it("Should fail to re-lock an already locked contract", async function () {
+            await mockToken.connect(charles).faucet(1_000_000);
+            const contractRole = await dtdEngine.DTD_CONTRACT_ROLE();
+            await dtdEngine.grantRole(contractRole, charles.address);
+
+            await expect(dtdEngine.createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockTokenAddress);
+            await expect(dtdEngine.connect(bob).createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(2, bob.address, mockTokenAddress);
+            await expect(dtdEngine.connect(charles).createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(3, charles.address, mockTokenAddress);
+
+            await mockToken.approve(dtdEngineAddress, 1_000_000);
+            await mockToken.connect(bob).approve(dtdEngineAddress, 1_000_000);
+            await mockToken.connect(charles).approve(dtdEngineAddress, 1_000_000);
+
+            await dtdEngine.changeDepositBalance(1, 1_000_000);
+            await dtdEngine.connect(bob).changeDepositBalance(2, 1_000_000);
+            await dtdEngine.connect(charles).changeDepositBalance(3, 1_000_000);
+
+            await expect(dtdEngine.createContract(emptyMockContractAddress, 2, 1, 1000, 1000)).to.emit(dtdEngine, "ContractCreated").withArgs(1, emptyMockContractAddress, alice.address);
+            await expect(dtdEngine.connect(bob).lockContract(1, 2)).to.emit(dtdEngine, "ContractLocked").withArgs(1, 1, 2);
+
+            await expect(dtdEngine.connect(charles).lockContract(1, 3)).to.be.revert(ethers);
+
+            const bobVault = await dtdEngine.getVault(2);
+            expect(bobVault.minMarginLevel).to.equal(1000);
         });
     });
 });

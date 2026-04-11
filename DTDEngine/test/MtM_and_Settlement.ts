@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
-import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
+import { ethers, createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils.js";
+import type { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types/index.js";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers.js";
 
 describe("MarkToMarket", function () {
     let dtdEngine: DTDEngine;
@@ -16,7 +15,7 @@ describe("MarkToMarket", function () {
     let mockToken2: MockToken;
     let mockToken2Address: string;
 
-    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
+    let alice: HardhatEthersSigner, bob: HardhatEthersSigner, charles: HardhatEthersSigner;
 
     const START_TOKENS = 1_000_000;
     const PENALTY_MARGIN = 1_000;
@@ -172,8 +171,24 @@ describe("MarkToMarket", function () {
         let aliceVault = await dtdEngine.getVault(1);
         expect(aliceVault.depositBalance).to.equal(START_TOKENS);
         expect(aliceVault.minMarginLevel).to.equal(2 * PENALTY_MARGIN);
-        emptyMockContract2.setDunzo(true);
+        await emptyMockContract2.setDunzo(true);
         await expect(dtdEngine.markToMarket(2)).to.emit(dtdEngine, "ContractSettled").withArgs(2, 0);
+        aliceVault = await dtdEngine.getVault(1);
+        expect(aliceVault.depositBalance).to.equal(START_TOKENS);
+        expect(aliceVault.minMarginLevel).to.equal(PENALTY_MARGIN);
+    });
+
+    it("Should not corrupt vault state when settling a contract with no counterparty and non-zero PnL", async function () {
+        await expect(dtdEngine.createContract(emptyMockContract2Address, 2, 1, PENALTY_MARGIN, PENALTY_MARGIN)).to.emit(dtdEngine, "ContractCreated").withArgs(2, emptyMockContract2Address, alice.address);
+        let aliceVault = await dtdEngine.getVault(1);
+        expect(aliceVault.depositBalance).to.equal(START_TOKENS);
+        expect(aliceVault.minMarginLevel).to.equal(2 * PENALTY_MARGIN);
+
+        await emptyMockContract2.setPayoff([500]);
+        await emptyMockContract2.setDunzo(true);
+
+        await dtdEngine.markToMarket(2);
+
         aliceVault = await dtdEngine.getVault(1);
         expect(aliceVault.depositBalance).to.equal(START_TOKENS);
         expect(aliceVault.minMarginLevel).to.equal(PENALTY_MARGIN);
@@ -190,9 +205,13 @@ describe("MarkToMarket", function () {
         });
 
         it("Should not transfer balance to other vault", async function () {
-            await expect(dtdEngine.connect(bob).transferBetweenVaults(2, 1, 1_000)).to.be.reverted;
-            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 1, START_TOKENS - PENALTY_MARGIN + 1)).to.be.reverted;
-            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 3, 1_000)).to.be.reverted;
+            await expect(dtdEngine.connect(bob).transferBetweenVaults(2, 1, 1_000)).to.be.revert(ethers);
+            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 1, START_TOKENS - PENALTY_MARGIN + 1)).to.be.revert(ethers);
+            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 3, 1_000)).to.be.revert(ethers);
+        });
+
+        it("Should not transfer more than available balance above margin", async function () {
+            await expect(dtdEngine.connect(alice).transferBetweenVaults(2, 1, START_TOKENS)).to.be.revert(ethers);
         });
     });
 });

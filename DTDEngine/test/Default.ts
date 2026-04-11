@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils";
-import { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types";
+import { ethers, createDTDEngine, createEmptyMockContract, createMockToken } from "./Utils.js";
+import type { DTDEngine, EmptyMockContract, MockToken } from "../typechain-types/index.js";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers.js";
 
 describe("Defaulting", function () {
     let dtdEngine: DTDEngine;
@@ -16,12 +15,12 @@ describe("Defaulting", function () {
     let mockToken2: MockToken;
     let mockToken2Address: string;
 
-    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
+    let alice: HardhatEthersSigner, bob: HardhatEthersSigner, charles: HardhatEthersSigner;
 
     const START_TOKENS = 1_000_0;
     const PENALTY_MARGIN = 1_000;
 
-    async function grantAndMoveTokens(party: SignerWithAddress, vaultId: number) {
+    async function grantAndMoveTokens(party: HardhatEthersSigner, vaultId: number) {
         await mockToken.connect(party).faucet(START_TOKENS);
 
         const contractRole = await dtdEngine.DTD_CONTRACT_ROLE();

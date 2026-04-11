@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.34;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
@@ -146,6 +146,7 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 	function lockContract(uint256 contractId, uint256 longPartyVaultId) public whenNotPaused onlyRole(DTD_CONTRACT_ROLE) {
 		require(address(dtdContracts[contractId].contractLogic) != address(0));
 		require(dtdContracts[contractId].shortCounterpartyVault != 0);
+		require(dtdContracts[contractId].longCounterpartyVault == 0);
 		require(tx.origin == dtdVaults[longPartyVaultId].owner);
 		require(
 			dtdVaults[longPartyVaultId].depositBalance >=
@@ -263,9 +264,8 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 				_changeMinMargin(shortVault, -int256(dtdContracts[contractId].penaltyMarginShortCounterparty));
 				delete dtdContracts[contractId];
 				emit ContractSettled(contractId, 0);
-			} else {
-				return 0;
 			}
+			return 0;
 		}
 
 		int256 prevPandL = dtdContracts[contractId].currentPnL;
@@ -360,11 +360,12 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 	// withdraw their *full* balance. Should only be used in extreme situations, the contract can no longer be used productively.
 	function emergencyVaultTransfer(uint256 vaultId) public whenPaused nonReentrant {
 		require(emergencyValve);
-		require(tx.origin == dtdVaults[vaultId].owner);
+		require(msg.sender == dtdVaults[vaultId].owner);
 		require(dtdVaults[vaultId].depositBalance > 0);
 
 		IERC20 token = IERC20(dtdVaults[vaultId].tokenAddr);
+		uint256 balance = dtdVaults[vaultId].depositBalance;
 		dtdVaults[vaultId].depositBalance = 0;
-		token.transfer(tx.origin, dtdVaults[vaultId].depositBalance);
+		token.transfer(msg.sender, balance);
 	}
 }

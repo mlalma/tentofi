@@ -10,3 +10,6 @@ cache
 artifacts
 
 package-lock.json
+
+types
+

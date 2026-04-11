@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.34;
 
 import "../interfaces/IDTDEngineContract.sol";
-import "hardhat/console.sol";
 
 contract EmptyMockContract is IDTDEngineContract {
 	int256[] private payoffProfile;
