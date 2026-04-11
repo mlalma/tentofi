@@ -43,6 +43,23 @@ describe("Administration", function () {
       await dtdEngine.connect(bob).grantRole(contractRole, emptyMockContractAddress);
       expect(await dtdEngine.hasRole(contractRole, emptyMockContractAddress)).to.eq(true);
     });
+
+    it("Should assign admin role to tx origin instead of deployer contract", async function () {
+      const factoryFactory = await ethers.getContractFactory("DTDEngineFactory");
+      const factory = await factoryFactory.deploy();
+      await factory.waitForDeployment();
+      await factory.deployEngine();
+
+      const deployedEngineAddress = await factory.lastEngine();
+      const deployedEngine = (await ethers.getContractAt("DTDEngine", deployedEngineAddress)) as DTDEngine;
+      const adminRole = await deployedEngine.DTD_ADMIN_ROLE();
+
+      expect(await deployedEngine.hasRole(adminRole, await factory.getAddress())).to.equal(false);
+      expect(await deployedEngine.hasRole(adminRole, alice.address)).to.equal(true);
+      await expect(factory.setPaused(deployedEngineAddress, true)).to.be.revert(ethers);
+      await deployedEngine.modifyPauseStatus(true);
+      expect(await deployedEngine.paused()).to.equal(true);
+    });
   });
 
   describe("Pausing", function () {
@@ -93,6 +110,26 @@ describe("Administration", function () {
       await dtdEngine.connect(alice).emergencyVaultTransfer(1);
 
       expect(await mockToken.balanceOf(alice.address)).to.equal(1_000_000);
+    });
+
+    it("Should revert emergency transfer when token transfer returns false", async function () {
+      const tokenFactory = await ethers.getContractFactory("FailingMockToken");
+      const failingToken = await tokenFactory.deploy();
+      await failingToken.waitForDeployment();
+
+      const failingTokenAddress = await failingToken.getAddress();
+      await dtdEngine.createVault(failingTokenAddress);
+      await failingToken.faucet(1_000_000);
+      await failingToken.approve(dtdEngineAddress, 1_000_000);
+      await dtdEngine.changeDepositBalance(1, 1_000_000);
+
+      await dtdEngine.modifyPauseStatus(true);
+      await dtdEngine.enableEmergencyValve();
+      await failingToken.setFailTransfer(true);
+
+      await expect(dtdEngine.emergencyVaultTransfer(1)).to.be.revert(ethers);
+      const vault = await dtdEngine.getVault(1);
+      expect(vault.depositBalance).to.equal(1_000_000);
     });
   });
 });

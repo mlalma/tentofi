@@ -34,6 +34,10 @@ describe("Creation", function () {
     });
 
     describe("Vault", function () {
+        it("Should reject creating vault with zero token address", async function () {
+            await expect(dtdEngine.createVault(ethers.ZeroAddress)).to.be.revert(ethers);
+        });
+
         it("Should create a vault and deposit tokens there", async function () {
             await expect(dtdEngine.createVault(mockTokenAddress)).to.emit(dtdEngine, "VaultCreated").withArgs(1, alice.address, mockTokenAddress);
 
@@ -52,6 +56,22 @@ describe("Creation", function () {
 
             await mockToken.approve(dtdEngineAddress, 999_999);
             await expect(dtdEngine.changeDepositBalance(1, 1_000_000)).to.be.revert(ethers);
+        });
+
+        it("Should revert deposit when token transferFrom returns false", async function () {
+            const tokenFactory = await ethers.getContractFactory("FailingMockToken");
+            const failingToken = await tokenFactory.deploy();
+            await failingToken.waitForDeployment();
+
+            const failingTokenAddress = await failingToken.getAddress();
+            await dtdEngine.createVault(failingTokenAddress);
+            await failingToken.faucet(1_000_000);
+            await failingToken.approve(dtdEngineAddress, 1_000_000);
+            await failingToken.setFailTransferFrom(true);
+
+            await expect(dtdEngine.changeDepositBalance(1, 1_000_000)).to.be.revert(ethers);
+            const vault = await dtdEngine.getVault(1);
+            expect(vault.depositBalance).to.equal(0);
         });
 
         it("Should create two vaults", async function () {

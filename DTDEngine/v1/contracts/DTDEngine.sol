@@ -5,10 +5,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IDTDEngineContract.sol";
 
 // Decentralized Token Depository (DTD) Engine for managing bilateral contracts between counterparties.
 contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
+	using SafeERC20 for IERC20;
+
 	// DTD Administrator administers the whole contract and can influence on everything
 	bytes32 public constant DTD_ADMIN_ROLE = keccak256("DTD_ADMIN_ROLE");
 	// DTD Contract Administrator can define which OTC Contracts can interact with DTD Engine
@@ -101,6 +104,8 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 
 	// Creates new vault for a user
 	function createVault(address tokenAddr) public whenNotPaused returns (uint256) {
+		require(tokenAddr != address(0));
+
 		Vault memory vault;
 		vault.owner = msg.sender;
 		vault.tokenAddr = tokenAddr;
@@ -178,7 +183,7 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 
 		if (amount > 0) {
 			uint256 uMarginDelta = uint256(amount);
-			token.transferFrom(msg.sender, address(this), uMarginDelta);
+			token.safeTransferFrom(msg.sender, address(this), uMarginDelta);
 			dtdVaults[vaultId].depositBalance += uMarginDelta;
 		} else if (amount < 0) {
 			uint256 uMarginDelta = uint256(-amount);
@@ -186,7 +191,7 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 				uMarginDelta <= dtdVaults[vaultId].depositBalance &&
 					dtdVaults[vaultId].depositBalance - uMarginDelta >= dtdVaults[vaultId].minMarginLevel
 			);
-			token.transfer(msg.sender, uMarginDelta);
+			token.safeTransfer(msg.sender, uMarginDelta);
 			dtdVaults[vaultId].depositBalance -= uMarginDelta;
 		}
 	}
@@ -366,6 +371,6 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 		IERC20 token = IERC20(dtdVaults[vaultId].tokenAddr);
 		uint256 balance = dtdVaults[vaultId].depositBalance;
 		dtdVaults[vaultId].depositBalance = 0;
-		token.transfer(msg.sender, balance);
+		token.safeTransfer(msg.sender, balance);
 	}
 }
