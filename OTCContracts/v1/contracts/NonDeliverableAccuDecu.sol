@@ -75,7 +75,7 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 		acdeData.consolidatedPL = 0;
 
 		(address vaultOwner, ) = dtdEngine.getVaultOwners(dtdContractId);
-		require(vaultOwner == tx.origin);
+		require(vaultOwner == msg.sender);
 
 		NDACDELedger[NDACDELedgerCounter] = acdeData;
 		NDACDELedgerCounter += 1;
@@ -91,7 +91,7 @@ contract NonDeliverableAccuDecu is OTCContractBase {
 		require(data.notionalAmount > 0);
 		require(data.state == ContractState.open);
 
-		dtdEngine.lockContract(contractId, longPartyVaultId);
+		dtdEngine.lockContract(data.baseData.dtdContractId, longPartyVaultId);
 		data.state = ContractState.active;
 		data.baseData.contractLockTime = uint64(block.timestamp);
 

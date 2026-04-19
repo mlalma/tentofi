@@ -48,7 +48,7 @@ contract NonDeliverableSwap is OTCContractBase, ReentrancyGuard {
 		swapData.state = ContractState.open;
 
 		(address vaultOwner, ) = dtdEngine.getVaultOwners(dtdContractId);
-		require(vaultOwner == tx.origin);
+		require(vaultOwner == msg.sender);
 
 		NDSLedger[NDSLedgerCounter] = swapData;
 		NDSLedgerCounter += 1;
@@ -64,7 +64,7 @@ contract NonDeliverableSwap is OTCContractBase, ReentrancyGuard {
 		require(data.notionalAmount > 0);
 		require(data.state == ContractState.open);
 
-		dtdEngine.lockContract(contractId, longPartyVaultId);
+		dtdEngine.lockContract(data.baseData.dtdContractId, longPartyVaultId);
 		data.state = ContractState.active;
 		data.baseData.contractLockTime = uint64(block.timestamp);
 

@@ -1,9 +1,7 @@
 // Index fix tests. Index fixes are used to lock down the strikes used then to calculate the actual index value
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types";
-import { createMockOracle, createNoFix, createSpotFix, createSpotFixMul, createSpotFixMulPlus, createSpotFixPlus } from "./Utils";
+import type { MockOracle, NoFix, SpotFix, SpotFixMul, SpotFixMulPlus, SpotFixPlus } from "../typechain-types/index.js";
+import { createMockOracle, createNoFix, createSpotFix, createSpotFixMul, createSpotFixMulPlus, createSpotFixPlus } from "./Utils.js";
 
 describe("Fix tests", function () {
     let noFix: NoFix;
@@ -30,7 +28,7 @@ describe("Fix tests", function () {
             const oracle = await createMockOracle();
             await oracle.setVals(vals);
             oracles.push(oracle);
-            oracleAddresses.push(oracle.address);
+            oracleAddresses.push(await oracle.getAddress());
         }
     });
 

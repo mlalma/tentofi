@@ -4,14 +4,16 @@ import { ethers } from "hardhat";
 // > npx hardhat run ./scripts/deploy.ts --network [network defined in hardhat.config.ts]
 //
 // Example:
-// > npx hardhat run ./scripts/deploy.ts --network polygon_mumbai
+// > npx hardhat run ./scripts/deploy.ts --network polygon_amoy
 
 async function main() {
   const flatCollateralCalc = await (await ethers.getContractFactory("FlatCollateralCalculator")).deploy();
-  console.log(`FlatCollateralCalc deployed to address: ${flatCollateralCalc.address}`);
+  await flatCollateralCalc.waitForDeployment();
+  console.log(`FlatCollateralCalc deployed to address: ${await flatCollateralCalc.getAddress()}`);
 
   const linearCollateralCalc = await (await ethers.getContractFactory("LinearCollateralCalculator")).deploy();
-  console.log(`LinearCollateralCalc deployed to address: ${linearCollateralCalc.address}`);
+  await linearCollateralCalc.waitForDeployment();
+  console.log(`LinearCollateralCalc deployed to address: ${await linearCollateralCalc.getAddress()}`);
 }
 
 main()

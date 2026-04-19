@@ -1,7 +1,8 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { CollateralMock, FlatCollateralCalculator, LinearCollateralCalculator } from "../typechain-types";
+import hre from "hardhat";
+import type { CollateralMock, FlatCollateralCalculator, LinearCollateralCalculator } from "../typechain-types/index.js";
+
+const { ethers } = await hre.network.connect();
 
 describe("CollateralCalculators", function () {
 
@@ -11,8 +12,14 @@ describe("CollateralCalculators", function () {
 
     beforeEach(async function () {
         flatCalc = await (await ethers.getContractFactory("FlatCollateralCalculator")).deploy();
+        await flatCalc.waitForDeployment();
         linearCalc = await (await ethers.getContractFactory("LinearCollateralCalculator")).deploy();
-        mock = await (await ethers.getContractFactory("CollateralMock")).deploy(flatCalc.address, linearCalc.address);
+        await linearCalc.waitForDeployment();
+        mock = await (await ethers.getContractFactory("CollateralMock")).deploy(
+            await flatCalc.getAddress(),
+            await linearCalc.getAddress(),
+        );
+        await mock.waitForDeployment();
     });
 
     it("Should test flat collateral calculator", async function () {

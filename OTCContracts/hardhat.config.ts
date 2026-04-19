@@ -1,29 +1,40 @@
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
+import { defineConfig, configVariable } from "hardhat/config";
+import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
-require('dotenv').config();
-
-const { API_URL, PRIVATE_KEY } = process.env;
-
-module.exports = {
-  solidity: "0.8.17",
+export default defineConfig({
+  plugins: [hardhatToolboxMochaEthers],
   paths: {
-    sources: "./v1"
+    sources: "./v1",
   },
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 1000
-    }
+  typechain: {
+    outDir: "./typechain-types",
   },
-  defaultNetwork: "hardhat",
+  solidity: {
+    version: "0.8.34",
+    npmFilesToBuild: [
+      "tento-dtd/v1/contracts/DTDEngine.sol",
+      "tento-index/v1/contracts/Index.sol",
+      "tento-index/v1/contracts/IndexCalculator.sol",
+      "tento-index/v1/contracts/IndexFix.sol",
+      "tento-otccontractbase/v1/contracts/CollateralCalculators.sol",
+    ],
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+      evmVersion: "cancun",
+    },
+  },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true
+      type: "edr-simulated",
+      allowUnlimitedContractSize: true,
     },
-    polygon_mumbai: {
-      url: API_URL,
-      accounts: [`0x${PRIVATE_KEY}`]
-    }
-  }
-}
+    polygon_amoy: {
+      type: "http",
+      url: configVariable("API_URL"),
+      accounts: [configVariable("PRIVATE_KEY")],
+    },
+  },
+});

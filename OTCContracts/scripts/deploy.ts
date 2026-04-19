@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 // > npx hardhat run ./scripts/deploy.ts --network [network defined in hardhat.config.ts]
 //
 // Example:
-// > npx hardhat run ./scripts/deploy.ts --network polygon_mumbai
+// > npx hardhat run ./scripts/deploy.ts --network polygon_amoy
 
 async function main() {
 }

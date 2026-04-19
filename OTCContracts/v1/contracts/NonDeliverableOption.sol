@@ -50,9 +50,11 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 		require(optionData.baseData.offerEndTime > block.timestamp);
 		require(optionData.baseData.offerEndTime < optionData.baseData.contractEndTime);
 		require(optionData.notionalAmount > 0);
+		require(optionData.optionParams.length >= 2, "Invalid option params");
 		require(optionData.optionParams[0] >= 0);
 
 		if (optionData.optionType == OptionType.euroDigitalCall || optionData.optionType == OptionType.euroDigitalPut) {
+			require(optionData.optionParams.length >= 3, "Invalid digital option params");
 			require(optionData.optionParams[2] > 0);
 		}
 
@@ -68,7 +70,7 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 		optionData.state = ContractState.open;
 
 		(address vaultOwner, ) = dtdEngine.getVaultOwners(dtdContractId);
-		require(vaultOwner == tx.origin);
+		require(vaultOwner == msg.sender);
 
 		NDOLedger[NDOLedgerCounter] = optionData;
 		NDOLedgerCounter += 1;
@@ -90,7 +92,7 @@ contract NonDeliverableOption is OTCContractBase, ReentrancyGuard {
 			uint256(data.optionParams[0])
 		);
 
-		dtdEngine.lockContract(contractId, longPartyVaultId);
+		dtdEngine.lockContract(data.baseData.dtdContractId, longPartyVaultId);
 		data.state = ContractState.active;
 		data.baseData.contractLockTime = uint64(block.timestamp);
 

@@ -1,29 +1,33 @@
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
+import { defineConfig, configVariable } from "hardhat/config";
+import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
-require('dotenv').config();
-
-const { API_URL, PRIVATE_KEY } = process.env;
-
-module.exports = {
-  solidity: "0.8.27",
+export default defineConfig({
+  plugins: [hardhatToolboxMochaEthers],
   paths: {
-    sources: "./v1"
+    sources: "./v1",
   },
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 1000
-    }
+  typechain: {
+    outDir: "./typechain-types",
   },
-  defaultNetwork: "hardhat",
+  solidity: {
+    version: "0.8.34",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+      evmVersion: "cancun",
+    },
+  },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true
+      type: "edr-simulated",
+      allowUnlimitedContractSize: true,
     },
-    polygon_mumbai: {
-      url: API_URL,
-      accounts: [`0x${PRIVATE_KEY}`]
-    }
-  }
-}
+    polygon_amoy: {
+      type: "http",
+      url: configVariable("API_URL"),
+      accounts: [configVariable("PRIVATE_KEY")],
+    },
+  },
+});

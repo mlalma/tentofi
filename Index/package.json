@@ -2,6 +2,11 @@
   "name": "tento-index",
   "version": "1.0.5",
   "description": "Manages indices used to track values of underlyings in e.g. OTC derivatives",
+  "type": "module",
+  "scripts": {
+    "build": "hardhat build",
+    "test": "hardhat test"
+  },
   "author": "mla_lma",
   "license": "MIT",
   "publishConfig": {
@@ -29,13 +34,11 @@
     "artifacts/v1/interfaces"
   ],
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "dotenv": "^16.4.5",
-    "hardhat": "^2.22.11"
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
+    "hardhat": "^3.3.0"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.5.1",
-    "@openzeppelin/contracts": "^5.0.2",
-    "tento-datasource": "^1.0.0"
+    "@chainlink/contracts": "^1.5.0",
+    "@openzeppelin/contracts": "^5.6.1"
   }
 }

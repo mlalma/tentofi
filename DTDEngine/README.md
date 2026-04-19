@@ -10,7 +10,7 @@ A key feature of OTC contracts is that the exact details are negotiated directly
 
 In an OTC contract, the parties may agree to exchange cash flows (or in this case, token flows) periodically to reduce counterparty risk, or only at settlement. If the other party defaults, full settlement may not be possible, but in TradFi the parties usually know each other and can also take legal action to mitigate the situation. Nowadays in TradFi a lot of OTC contracts use and in some cases are required to use central counterparty clearing to reduce the risk.
 
-In the blockchain world, the two parties may not have the slightest idea who exactly their counterparty is and how liquid they are. At the same time, blockchains can facilitate complex financial contracts very effectively. This can significantly reduce the notional amounts of the contracts, making OTC instruments available to a wider audience and making the whole process much more transparent.
+In the blockchain world, the two parties may not have the slightest idea who exactly their counterparty is and how liquid they are. At the same time, blockchains can facilitate complex financial contracts very effectively. The notional amounts of the contracts can be considerably lower, making OTC instruments available to a wider audience and making the whole process much more transparent.
 
 DTD is a Solidity smart contract that facilitates the clearing and settlement of bilateral contracts. It does not contain any logic for handling OTC instruments (be it a non-deliverable swap or option, a target redemption forward, an interest rate swap or anything else). DTD facilitates the contract management for the exchange of token flows when marking-to-market, the settlement of the contracts and cases where a counterparty defaults.
 
@@ -75,7 +75,7 @@ There is a smart contract implementing non-deliverable swap (NDS) using DTD to m
 
 Let's assume two parties want to engage in a simple NDS transaction, which is settled in USDC and the underlying non-convertible currency is Korean won (KRW). The NDS contract reads the rate using Chainlink oracle's stream and the counterparties agree on following terms:
 
-- Amount of underlying, KRW: 10 000 000 (around 7900 USD)
+- Amount of underlying, KRW: 10 000 000
 - Agreed exchange rate KRW / USD: 0.00079
 - Contract duration: 30 days
 - Penalty margin: 500 USD for both parties

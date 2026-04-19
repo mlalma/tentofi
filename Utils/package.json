@@ -2,6 +2,11 @@
   "name": "tento-utils",
   "description": "Common functionality (libraries, contracts) used by different Tentσ components",
   "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "hardhat build",
+    "test": "hardhat test"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -28,8 +33,7 @@
     "artifacts/v1/interfaces"
   ],
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "dotenv": "^16.4.5",
-    "hardhat": "^2.22.11"
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
+    "hardhat": "^3.3.0"
   }
 }

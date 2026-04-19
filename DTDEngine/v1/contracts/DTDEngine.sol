@@ -107,11 +107,11 @@ contract DTDEngine is AccessControl, ReentrancyGuardTransient, Pausable {
 		require(tokenAddr != address(0));
 
 		Vault memory vault;
-		vault.owner = msg.sender;
+		vault.owner = tx.origin;
 		vault.tokenAddr = tokenAddr;
 		dtdVaults[dtdVaultCounter] = vault;
 
-		emit VaultCreated(dtdVaultCounter, msg.sender, tokenAddr);
+		emit VaultCreated(dtdVaultCounter, tx.origin, tokenAddr);
 		dtdVaultCounter += 1;
 		return dtdVaultCounter - 1;
 	}

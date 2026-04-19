@@ -1,10 +1,29 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { DTDEngine, MockToken, NonDeliverableSwap, IndexTracker, AbsoluteSpotIndexCalculator, FlatCollateralCalculator, MockOracle, SpotFix, RelativeSpotIndexCalculator } from "../typechain-types";
-import { createDTDEngine, createMockToken, createIndexContract, createRelativeSpotIndexCalculator, createFlatCollateralCalculator, createNDSContract, createMockOracle, createSpotFix, createAbsoluteSpotIndexCalculator } from "./Utils";
-import { OTCContractBase } from "../typechain-types/v1/contracts/NonDeliverableSwap";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers.js";
+import type { Contract } from "ethers";
+import type {
+    DTDEngine,
+    MockToken,
+    NonDeliverableSwap,
+    IndexTracker,
+    FlatCollateralCalculator,
+    MockOracle,
+    SpotFix,
+    RelativeSpotIndexCalculator,
+} from "../typechain-types/index.js";
+import {
+    ethers,
+    createDTDEngine,
+    createMockToken,
+    createIndexContract,
+    createRelativeSpotIndexCalculator,
+    createFlatCollateralCalculator,
+    createNDSContract,
+    createMockOracle,
+    createSpotFix,
+    time,
+} from "./Utils.js";
+import type { OTCContractBase } from "../typechain-types/v1/contracts/NonDeliverableSwap.js";
 
 describe("NDS", function () {
     const VALUE_MULTIPLIER = 10 ** 6;
@@ -19,25 +38,43 @@ describe("NDS", function () {
     let relativeSpot: RelativeSpotIndexCalculator;
     let fixStyle: SpotFix;
     let flatCollateralCalc: FlatCollateralCalculator;
+    let dtdEngineAddress: string;
+    let mockTokenAddress: string;
+    let mockOracleAddress: string;
+    let relativeSpotAddress: string;
+    let fixStyleAddress: string;
+    let flatCollateralCalcAddress: string;
+    let ndsContractAddress: string;
     let offerEndTime: number;
     let contractEndTime: number;
     let base: OTCContractBase.BaseContractDataStruct;
     let contract: NonDeliverableSwap.NDSDataStruct;
-    let alice: SignerWithAddress, bob: SignerWithAddress, charles: SignerWithAddress;
+    let callForwarder: Contract;
+    let alice: HardhatEthersSigner, bob: HardhatEthersSigner, charles: HardhatEthersSigner;
     let oracleVals: Array<number>;
 
     beforeEach(async function () {
         dtdEngine = await createDTDEngine();
+        dtdEngineAddress = await dtdEngine.getAddress();
         mockToken = await createMockToken();
+        mockTokenAddress = await mockToken.getAddress();
         mockOracle = await createMockOracle();
+        mockOracleAddress = await mockOracle.getAddress();
         index = await createIndexContract();
+        const indexAddress = await index.getAddress();
         fixStyle = await createSpotFix();
-        relativeSpot = await createRelativeSpotIndexCalculator(index.address);
+        fixStyleAddress = await fixStyle.getAddress();
+        relativeSpot = await createRelativeSpotIndexCalculator(indexAddress);
+        relativeSpotAddress = await relativeSpot.getAddress();
         flatCollateralCalc = await createFlatCollateralCalculator();
-        ndsContract = await createNDSContract(index.address, dtdEngine.address);
-        const contractRole = await dtdEngine.CONTRACT_ROLE();
+        flatCollateralCalcAddress = await flatCollateralCalc.getAddress();
+        ndsContract = await createNDSContract(indexAddress, dtdEngineAddress);
+        ndsContractAddress = await ndsContract.getAddress();
+        callForwarder = await (await ethers.getContractFactory("OTCCallForwarder")).deploy();
+        await callForwarder.waitForDeployment();
+        const contractRole = await dtdEngine.DTD_CONTRACT_ROLE();
 
-        dtdEngine.grantRole(contractRole, ndsContract.address);
+        await dtdEngine.grantRole(contractRole, ndsContractAddress);
 
         [alice, bob, charles] = await ethers.getSigners();
 
@@ -45,23 +82,23 @@ describe("NDS", function () {
         await mockToken.connect(bob).faucet(START_BALANCE);
         await mockToken.connect(charles).faucet(START_BALANCE);
 
-        await dtdEngine.connect(alice).createVault(mockToken.address);
-        await mockToken.connect(alice).approve(dtdEngine.address, START_BALANCE);
+        await dtdEngine.connect(alice).createVault(mockTokenAddress);
+        await mockToken.connect(alice).approve(dtdEngineAddress, START_BALANCE);
         await dtdEngine.connect(alice).changeDepositBalance(1, START_BALANCE);
 
-        await dtdEngine.connect(bob).createVault(mockToken.address);
-        await mockToken.connect(bob).approve(dtdEngine.address, START_BALANCE);
+        await dtdEngine.connect(bob).createVault(mockTokenAddress);
+        await mockToken.connect(bob).approve(dtdEngineAddress, START_BALANCE);
         await dtdEngine.connect(bob).changeDepositBalance(2, START_BALANCE);
 
-        await dtdEngine.connect(charles).createVault(mockToken.address);
-        await mockToken.connect(charles).approve(dtdEngine.address, START_BALANCE);
+        await dtdEngine.connect(charles).createVault(mockTokenAddress);
+        await mockToken.connect(charles).approve(dtdEngineAddress, START_BALANCE);
         await dtdEngine.connect(charles).changeDepositBalance(3, START_BALANCE);
 
-        await index.createOracleStorage([mockOracle.address], relativeSpot.address, fixStyle.address);
+        await index.createOracleStorage([mockOracleAddress], relativeSpotAddress, fixStyleAddress);
 
-        const oracleStg1 = await index.calculateOracleIndex([mockOracle.address], relativeSpot.address, fixStyle.address);
+        const oracleStg1 = await index.calculateOracleIndex([mockOracleAddress], relativeSpotAddress, fixStyleAddress);
 
-        await index.createSpotIndex(oracleStg1, [10000], [0], ndsContract.address);
+        await index.createSpotIndex(oracleStg1, [10000], [0], ndsContractAddress);
 
         offerEndTime = await time.latest() + 60 * 60;
         contractEndTime = await time.latest() + 10 * 60 * 60;
@@ -70,7 +107,7 @@ describe("NDS", function () {
             dtdContractId: 0,
             indexId: 1,
             fixParameters: [],
-            collateralCalculator: flatCollateralCalc.address,
+            collateralCalculator: flatCollateralCalcAddress,
             collateralCalculatorParams: [0, 10000],
             offerEndTime: offerEndTime,
             contractLockTime: 0,
@@ -101,18 +138,18 @@ describe("NDS", function () {
 
     it("Should fail to create contract", async function () {
         contract.baseData.offerEndTime = await time.latest() - 10000;
-        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.rejected;
+        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.revert(ethers);
 
         contract.baseData.offerEndTime = offerEndTime;
         contract.baseData.contractEndTime = offerEndTime - 1;
-        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.rejected;
+        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.revert(ethers);
 
         contract.baseData.contractEndTime = contractEndTime;
         contract.notionalAmount = 0;
-        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.rejected;
+        await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.revert(ethers);
 
         contract.notionalAmount = 1000 * VALUE_MULTIPLIER;
-        await expect(ndsContract.connect(bob).createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.rejected;
+        await expect(ndsContract.connect(bob).createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.be.revert(ethers);
     });
 
     it("Should lock the contract after counterparty confirmation", async function () {
@@ -130,10 +167,10 @@ describe("NDS", function () {
 
     it("Should fail to lock the contract during counterparty confirmation", async function () {
         await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.emit(ndsContract, "NonDeliverableSwapCreated").withArgs(1);
-        await expect(ndsContract.connect(bob).lockContract(2, 2)).to.be.rejected;
+        await expect(ndsContract.connect(bob).lockContract(2, 2)).to.be.revert(ethers);
 
         await expect(ndsContract.connect(charles).lockContract(1, 3)).to.emit(ndsContract, "NonDeliverableSwapLocked").withArgs(1);
-        await expect(ndsContract.connect(bob).lockContract(1, 2)).to.be.rejected;
+        await expect(ndsContract.connect(bob).lockContract(1, 2)).to.be.revert(ethers);
     });
 
     it("Should mark-to-market the contract successfully", async function () {
@@ -159,7 +196,53 @@ describe("NDS", function () {
         await expect(ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER)).to.emit(ndsContract, "NonDeliverableSwapCreated").withArgs(1);
         await expect(ndsContract.connect(bob).lockContract(1, 2)).to.emit(ndsContract, "NonDeliverableSwapLocked").withArgs(1);
 
-        await expect(ndsContract.markToMarket(1)).to.be.rejected;
-        await expect(dtdEngine.markToMarket(2)).to.be.rejected;
+        await expect(ndsContract.markToMarket(1)).to.be.revert(ethers);
+        await expect(dtdEngine.markToMarket(2)).to.be.revert(ethers);
+    });
+
+    it("Should reject forwarded contract creation to prevent tx.origin auth bypass", async function () {
+        const callData = ndsContract.interface.encodeFunctionData("createSwapContract", [
+            contract,
+            1,
+            100 * VALUE_MULTIPLIER,
+            200 * VALUE_MULTIPLIER
+        ]);
+
+        await expect(callForwarder.connect(alice).forward(ndsContractAddress, callData)).to.be.revert(ethers);
+    });
+
+    it("Should lock the correct DTD contract id when multiple OTC contracts share one engine", async function () {
+        const contractRole = await dtdEngine.DTD_CONTRACT_ROLE();
+        const secondNdsContract = await createNDSContract(await index.getAddress(), dtdEngineAddress);
+        const secondNdsContractAddress = await secondNdsContract.getAddress();
+        await dtdEngine.grantRole(contractRole, secondNdsContractAddress);
+
+        const oracleStorageId = await index.calculateOracleIndex([mockOracleAddress], relativeSpotAddress, fixStyleAddress);
+        await index.createSpotIndex(oracleStorageId, [10000], [0], secondNdsContractAddress);
+
+        const secondBase = {
+            ...base,
+            indexId: 2
+        };
+        const secondContract = {
+            baseData: secondBase,
+            state: 0,
+            notionalAmount: NOTIONAL_AMOUNT
+        };
+
+        await ndsContract.createSwapContract(contract, 1, 100 * VALUE_MULTIPLIER, 200 * VALUE_MULTIPLIER);
+        await secondNdsContract.connect(charles).createSwapContract(
+            secondContract,
+            3,
+            100 * VALUE_MULTIPLIER,
+            200 * VALUE_MULTIPLIER
+        );
+
+        await secondNdsContract.connect(bob).lockContract(1, 2);
+
+        const firstDtdContract = await dtdEngine.getContract(1);
+        const secondDtdContract = await dtdEngine.getContract(2);
+        expect(firstDtdContract.longCounterpartyVault).to.equal(0);
+        expect(secondDtdContract.longCounterpartyVault).to.equal(2);
     });
 });
